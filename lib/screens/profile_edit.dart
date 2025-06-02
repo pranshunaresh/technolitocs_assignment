@@ -134,7 +134,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
     try {
       final request = http.MultipartRequest(
-        'POST',
+        'PUT',
         Uri.parse(
           'https://api.rolbol.org/api/v1/adminuser/updateMemberProfile',
         ),
@@ -164,7 +164,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
         );
       }
     } catch (e) {
-      debugPrint('Error uploading image: $e');
+      debugPrint(
+        '\n\n\n\n **********************Error uploading image: $e \n\n\n\n\n',
+      );
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Failed to upload image')));

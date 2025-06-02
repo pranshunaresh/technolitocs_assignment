@@ -118,6 +118,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       backgroundColor: UI_COLORS.uiBgColor,
       resizeToAvoidBottomInset: true,
+
       appBar: AppBar(
         backgroundColor: UI_COLORS.uiBgColor,
         elevation: 0,
@@ -266,7 +267,7 @@ class _LoginScreenState extends State<LoginScreen> {
             Positioned(
               left: -130,
               right: 0,
-              bottom: bottomInset > 0 ? bottomInset + -245 : 30,
+              bottom: bottomInset > 0 ? bottomInset + -325 : 30,
               child: Center(
                 child: SizedBox(
                   width: 150,

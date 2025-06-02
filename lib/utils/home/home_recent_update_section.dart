@@ -15,7 +15,7 @@ class RecentUpdatesSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Padding(
-            padding: EdgeInsets.only(left: 18),
+            padding: EdgeInsets.only(left: 20),
             child: Text(
               'Recent Updates',
               style: TextStyle(
@@ -48,7 +48,8 @@ class RecentUpdatesSection extends StatelessWidget {
             ),
           ),
 
-          // Update cards
+          // Update cards with reduced vertical spacing
+          const SizedBox(height: 12), // Reduced from 18 to 12
           const UpdateCardWidget(
             title:
                 'Join our Community Donation Drive 2025 to help those in need!',
@@ -58,6 +59,7 @@ class RecentUpdatesSection extends StatelessWidget {
             bottomText:
                 'Be a part of our Community Donation Drive 2025! Together, we can make a difference in t...',
           ),
+          const SizedBox(height: 8), // Reduced spacing between cards
           const UpdateCardWidget(
             title:
                 'National Confrence 2025 : National Association Realtors India',
@@ -67,6 +69,7 @@ class RecentUpdatesSection extends StatelessWidget {
             bottomText:
                 'The National Conference 2022, hosted by the National Association of Realtors India, brough...',
           ),
+          const SizedBox(height: 8), // Reduced spacing between cards
           const UpdateCardWidget(
             title:
                 'Celebrating Unity: Yoga Day 2022 - A Journey Towards Wellness and Harmony for All',
@@ -76,6 +79,7 @@ class RecentUpdatesSection extends StatelessWidget {
             bottomText:
                 'We invite you to participate in our Community Donation Drive 2023, a heartfelt initiative aime...',
           ),
+          const SizedBox(height: 8), // Reduced spacing between cards
           const UpdateCardWidget(
             title:
                 'Building Connections: A Fun Team Adventure to Strengthen Bonds and Collaboration Together!',
@@ -119,7 +123,7 @@ class _NavTabContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: 41,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       decoration: BoxDecoration(
         color: isSelected ? const Color(0xffE8E8E8) : Colors.transparent,
         borderRadius: BorderRadius.circular(40),
