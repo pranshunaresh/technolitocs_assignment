@@ -122,6 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
         const SizedBox(height: 12),
         const RecentUpdatesSection(),
         const SizedBox(height: 20),
+        
         Padding(
           padding: const EdgeInsets.only(left: 18),
           child: Column(
