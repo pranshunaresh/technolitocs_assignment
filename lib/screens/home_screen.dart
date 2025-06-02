@@ -122,7 +122,6 @@ class _HomeScreenState extends State<HomeScreen> {
         const SizedBox(height: 12),
         const RecentUpdatesSection(),
         const SizedBox(height: 20),
-        
         Padding(
           padding: const EdgeInsets.only(left: 18),
           child: Column(
@@ -294,8 +293,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildTopContainer(BuildContext context) {
     return Container(
-      color:
-          UI_COLORS.uiWhiteColor, // This ensures the background is fully white
+      color: UI_COLORS.uiWhiteColor,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 5),
         child: Container(

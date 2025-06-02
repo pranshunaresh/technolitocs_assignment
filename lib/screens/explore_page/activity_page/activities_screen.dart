@@ -160,7 +160,6 @@ class _ActivityScreenState extends State<ActivityScreen> {
                       onTap: () {
                         final blogData = BlogData(
                           title: event.title,
-                          description: event.description,
                           bannerImage: imageUrl,
                           postDate: dateStr,
                         );

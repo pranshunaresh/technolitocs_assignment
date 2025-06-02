@@ -7,6 +7,7 @@ class DirectoryProfile {
   final String? rbNationalDesignationId;
   final String? rbChapterDesignationId;
   final String? cityId;
+  final bool isPioneerMember;
 
   var companyName;
 
@@ -17,9 +18,12 @@ class DirectoryProfile {
     this.rbNationalDesignationId,
     this.rbChapterDesignationId,
     this.cityId,
+    required this.isPioneerMember,
   });
 
   factory DirectoryProfile.fromJson(Map<String, dynamic> json) {
+    bool x = json['membershipType'].contains("PIONEER_PATRON_MEMBER");
+
     return DirectoryProfile(
       name: json['name'] ?? '',
       profilePicture: json['profilePicture'] ?? '',
@@ -27,6 +31,7 @@ class DirectoryProfile {
       rbNationalDesignationId: json['rbNationalDesignationId'],
       rbChapterDesignationId: json['rbChapterDesignationId'],
       cityId: json['cityId'],
+      isPioneerMember: x,
     );
   }
 
@@ -49,9 +54,6 @@ class DirectoryProfile {
   get updatedAt => null;
 
   get quote => null;
-
-  get isPioneerMember => null;
-
   get profession => null;
 
   get id => null;

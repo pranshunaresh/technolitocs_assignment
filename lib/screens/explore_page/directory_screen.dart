@@ -146,17 +146,18 @@ class _DirectoryState extends State<Directory> {
 
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: EdgeInsets.symmetric(vertical: 18, horizontal: 10),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade300),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.2),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ],
+            // border: Border.all(color: Colors.grey.shade300),
+            // boxShadow: [
+            //   BoxShadow(
+            //     color: Colors.grey.withOpacity(0.2),
+            //     blurRadius: 6,
+            //     offset: const Offset(0, 2),
+            //   ),
+            // ],
           ),
           child: ListTile(
             onTap: () {
@@ -208,12 +209,11 @@ class _DirectoryState extends State<Directory> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                if (member.defaultStatus.toLowerCase() == "pioneer")
-                  _pioneerTag(),
+                if (member.isPioneerMember) _pioneerTag(),
                 // Add special tags for Fanish Jain and Anup Mundhra
-                if (member.name.toLowerCase().contains('fanish jain') ||
-                    member.name.toLowerCase().contains('anup mundhra'))
-                  _specialTag(),
+                // if (member.name.toLowerCase().contains('fanish jain') ||
+                //     member.name.toLowerCase().contains('anup mundhra'))
+                //   _specialTag(),
               ],
             ),
             subtitle: Text(
