@@ -12,6 +12,8 @@ import 'package:assihnment_technolitocs/utils/ui_colors.dart';
 import 'package:assihnment_technolitocs/screens/explore_page/directory_screen.dart';
 import '../utils/home/home_side_menu.dart';
 
+final _controller = ScrollController();
+
 class HomeScreenModel {
   final List<String> imageUrls;
   HomeScreenModel({required this.imageUrls});
@@ -37,6 +39,14 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   HomeScreenModel? _homeScreenModel;
+
+  String removeAllHtmlTags(String htmlText) {
+    RegExp exp = RegExp(r"<[^>]*>", multiLine: true, caseSensitive: false);
+    return htmlText
+        .replaceAll(exp, '')
+        .replaceAll('&nbsp;', ' ')
+        .replaceAll('&amp;', '&');
+  }
 
   final PageController _pageController = PageController(viewportFraction: 0.9);
   int _currentIndex = 0;
@@ -110,50 +120,21 @@ class _HomeScreenState extends State<HomeScreen> {
       colors: [Color(0xFF30D6EF), Color(0xFF6A81EB), Color(0xFF794CEC)],
     );
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 12),
-        _buildImageScroller(),
-        const SizedBox(height: 16),
-        const AllFeatureSection(),
-        const SizedBox(height: 12),
-        const ExploreSection(),
-        const SizedBox(height: 12),
-        const RecentUpdatesSection(),
-        const SizedBox(height: 20),
-        Padding(
-          padding: const EdgeInsets.only(left: 18),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Rest of Life',
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black87,
-                  fontFamily: 'Movatif',
-                ),
-              ),
-              Text(
-                'Best of Life',
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w500,
-                  fontFamily: 'Movatif',
-                  foreground:
-                      Paint()
-                        ..shader = textGradient.createShader(
-                          const Rect.fromLTWH(0, 0, 150, 30),
-                        ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 40),
-      ],
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+
+        children: [
+          const SizedBox(height: 12),
+          _buildImageScroller(),
+          const SizedBox(height: 16),
+          const AllFeatureSection(),
+          const SizedBox(height: 12),
+          const ExploreSection(),
+          const SizedBox(height: 12),
+          const RecentUpdatesSection(),
+        ],
+      ),
     );
   }
 
