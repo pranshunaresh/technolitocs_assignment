@@ -39,7 +39,6 @@ class _LoginScreenState extends State<LoginScreen> {
       if (response.statusCode == 200) {
         return true;
       } else {
-        // Decode and print/log error message
         final error = jsonDecode(response.body);
         print('OTP Send Failed: ${error['message'] ?? 'Unknown error'}');
         _showSnackBar(error['message'] ?? 'Failed to send OTP');
@@ -48,8 +47,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       print('Exception while sending OTP: $e');
       _showSnackBar("Failed to send OTP. Please try again.");
-
-      return true;
+      return false;
     }
   }
 
@@ -61,7 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _onProceedPressed() async {
-    if (_isSendingOtp) return; // Prevent multiple taps while sending
+    if (_isSendingOtp) return;
 
     String mobile = _controller.text.trim();
 
@@ -88,7 +86,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (otpSent) {
       _lastOtpSentTime = DateTime.now();
-
       if (!mounted) return;
       Navigator.push(
         context,
@@ -99,13 +96,10 @@ class _LoginScreenState extends State<LoginScreen> {
         if (mounted) setState(() => _isSendingOtp = false);
       });
     } else {
-      if (!mounted) return;
-      setState(() => _isSendingOtp = false);
-      _showSnackBar("Failed to send OTP. Please try again.");
+      if (mounted) setState(() => _isSendingOtp = false);
     }
   }
 
-  @override
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
@@ -113,12 +107,10 @@ class _LoginScreenState extends State<LoginScreen> {
     double paddingHorizontal = screenWidth * 0.06;
     double paddingVertical = screenHeight * 0.05;
     double topPadding = screenHeight * 0.06;
-    double bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Scaffold(
       backgroundColor: UI_COLORS.uiBgColor,
       resizeToAvoidBottomInset: true,
-
       appBar: AppBar(
         backgroundColor: UI_COLORS.uiBgColor,
         elevation: 0,
@@ -139,6 +131,7 @@ class _LoginScreenState extends State<LoginScreen> {
           children: [
             Column(
               children: [
+                // Top section (blue background)
                 Container(
                   height: screenHeight * 0.33,
                   width: double.infinity,
@@ -193,6 +186,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
                   ),
                 ),
+                // Bottom section (white background)
                 Expanded(
                   child: Stack(
                     clipBehavior: Clip.none,
@@ -241,6 +235,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ],
                         ),
                       ),
+                      // Phone number input field
                       Positioned(
                         top: -29,
                         left: paddingHorizontal,
@@ -262,12 +257,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
               ],
             ),
-
-            // Floating Go Button
+            // Fixed "Proceed" button (does NOT move with keyboard)
             Positioned(
-              left: -130,
-              right: 0,
-              bottom: bottomInset > 0 ? bottomInset + -325 : 30,
+              left: 0,
+              right: 158,
+              bottom: 10, // Fixed position
               child: Center(
                 child: SizedBox(
                   width: 150,

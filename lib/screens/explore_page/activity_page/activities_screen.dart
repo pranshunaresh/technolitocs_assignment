@@ -14,8 +14,9 @@ class ActivityScreen extends StatefulWidget {
 
 class _ActivityScreenState extends State<ActivityScreen> {
   List<NewsBlogEventResponses> _events = [];
-  bool _loading = true;
-  bool _apiWorking = true;
+  bool _isLoading = true;
+  bool _hasError = false;
+  String _errorMessage = '';
 
   @override
   void initState() {
@@ -33,191 +34,296 @@ class _ActivityScreenState extends State<ActivityScreen> {
         final model = newsBlogEventModelFromJson(response.body);
         setState(() {
           _events = model.data;
-          _loading = false;
-          _apiWorking = true;
+          _isLoading = false;
+          _hasError = false;
         });
       } else {
         setState(() {
-          _loading = false;
-          _apiWorking = false;
+          _isLoading = false;
+          _hasError = true;
+          _errorMessage = 'Failed to load events: ${response.statusCode}';
         });
       }
     } catch (e) {
       setState(() {
-        _loading = false;
-        _apiWorking = false;
+        _isLoading = false;
+        _hasError = true;
+        _errorMessage = 'Error fetching events: ${e.toString()}';
       });
     }
   }
 
-  // Define text styles
-  final TextStyle _searchHintStyle = const TextStyle(
-    fontFamily: 'Movatif',
-    color: Colors.black,
-    fontSize: 14,
-    fontWeight: FontWeight.w400,
-  );
-
-  final TextStyle _searchTextStyle = const TextStyle(
-    fontFamily: 'Movatif',
-    fontSize: 14,
-    color: Colors.black,
-  );
-
-  final TextStyle _dateTextStyle = TextStyle(
-    // No fontFamily specified - will use default
-    color: Colors.grey.shade500,
-    fontSize: 12,
-    fontWeight: FontWeight.w400,
-  );
-
-  final TextStyle _eventTitleStyle = const TextStyle(
-    fontFamily: 'Movatif',
-    fontSize: 14,
-    fontWeight: FontWeight.w600,
-    color: Colors.black,
-    height: 1.3,
-  );
-
-  final TextStyle _noEventsTextStyle = const TextStyle(
-    fontFamily: 'Movatif',
-    color: Colors.red,
-  );
+  Future<void> _refreshData() async {
+    setState(() {
+      _isLoading = true;
+      _hasError = false;
+    });
+    await _fetchEventData();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isPortrait =
+        MediaQuery.of(context).orientation == Orientation.portrait;
+
+    // Text styles
+    final TextStyle searchHintStyle = TextStyle(
+      fontFamily: 'Movatif',
+      color: Colors.black,
+      fontSize: screenSize.width * 0.035,
+      fontWeight: FontWeight.w400,
+    );
+
+    final TextStyle searchTextStyle = TextStyle(
+      fontFamily: 'Movatif',
+      fontSize: screenSize.width * 0.035,
+      color: Colors.black,
+    );
+
+    final TextStyle dateTextStyle = TextStyle(
+      color: Colors.grey.shade500,
+      fontSize: screenSize.width * 0.03,
+      fontWeight: FontWeight.w400,
+    );
+
+    final TextStyle eventTitleStyle = TextStyle(
+      fontFamily: 'Movatif',
+      fontSize: screenSize.width * 0.035,
+      fontWeight: FontWeight.w600,
+      color: Colors.black,
+      height: 1.3,
+    );
+
+    final TextStyle errorTextStyle = TextStyle(
+      fontFamily: 'Movatif',
+      color: Colors.red,
+      fontSize: screenSize.width * 0.04,
+    );
+
     return SafeArea(
-      child: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Column(
-            children: [
-              // Search Bar
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 0,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(70),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.search, color: Colors.black, size: 24),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextField(
-                        decoration: InputDecoration(
-                          hintText: 'Search by Event, Projects, Initiatives...',
-                          hintStyle: _searchHintStyle,
-                          border: InputBorder.none,
-                          contentPadding: const EdgeInsets.symmetric(
-                            vertical: 12,
+      child: RefreshIndicator(
+        onRefresh: _refreshData,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: screenSize.width * 0.04),
+            child: Column(
+              children: [
+                // Search Bar
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: screenSize.width * 0.04,
+                    vertical: screenSize.height * 0.01,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(70),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.search,
+                        color: Colors.black,
+                        size: screenSize.width * 0.06,
+                      ),
+                      SizedBox(width: screenSize.width * 0.03),
+                      Expanded(
+                        child: TextField(
+                          decoration: InputDecoration(
+                            hintText:
+                                'Search by Event, Projects, Initiatives...',
+                            hintStyle: searchHintStyle,
+                            border: InputBorder.none,
+                            contentPadding: EdgeInsets.symmetric(
+                              vertical: screenSize.height * 0.015,
+                            ),
                           ),
+                          style: searchTextStyle,
                         ),
-                        style: _searchTextStyle,
+                      ),
+                      Image.asset(
+                        'assets/images/Funnel.png',
+                        color: Colors.black,
+                        width: screenSize.width * 0.06,
+                        height: screenSize.width * 0.06,
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(height: screenSize.height * 0.03),
+
+                // Content Area
+                if (_isLoading)
+                  Center(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                        vertical: screenSize.height * 0.1,
+                      ),
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Theme.of(context).primaryColor,
+                        ),
                       ),
                     ),
-                    Image.asset(
-                      'assets/images/Funnel.png',
-                      color: Colors.black,
-                      width: 24,
-                      height: 24,
+                  )
+                else if (_hasError)
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                      vertical: screenSize.height * 0.02,
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
+                    child: Column(
+                      children: [
+                        Text(_errorMessage, style: errorTextStyle),
+                        SizedBox(height: screenSize.height * 0.02),
+                        ElevatedButton(
+                          onPressed: _refreshData,
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  )
+                else if (_events.isEmpty)
+                  Padding(
+                    padding: EdgeInsets.symmetric(
+                      vertical: screenSize.height * 0.02,
+                    ),
+                    child: Text('No events found', style: errorTextStyle),
+                  )
+                else
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: _events.length,
+                    itemBuilder: (context, index) {
+                      final event = _events[index];
+                      final dateStr = DateFormat(
+                        'd MMM yyyy',
+                      ).format(event.postDate);
+                      final imageUrl =
+                          'https://technolitics-s3-bucket.s3.ap-south-1.amazonaws.com/rolbol-s3-bucket/${event.bannerImage}';
 
-              // Loading / Error / Event List
-              if (_loading)
-                const Center(child: CircularProgressIndicator())
-              else if (_events.isEmpty)
-                Text('No events found', style: _noEventsTextStyle)
-              else
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: _events.length,
-                  itemBuilder: (context, index) {
-                    final event = _events[index];
-                    final dateStr = DateFormat(
-                      'd MMM yyyy',
-                    ).format(event.postDate);
-
-                    final imageUrl =
-                        'https://technolitics-s3-bucket.s3.ap-south-1.amazonaws.com/rolbol-s3-bucket/${event.bannerImage}';
-
-                    return GestureDetector(
-                      onTap: () {
-                        final blogData = BlogData(
-                          title: event.title,
-                          bannerImage: imageUrl,
-                          postDate: dateStr,
-                        );
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => BlogDetails(blogData: blogData),
+                      return GestureDetector(
+                        onTap: () {
+                          final blogData = BlogData(
+                            title: event.title,
+                            bannerImage: imageUrl,
+                            postDate: dateStr,
+                            description: event.description ?? '',
+                          );
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => BlogDetails(blogData: blogData),
+                            ),
+                          );
+                        },
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                            bottom: screenSize.height * 0.02,
                           ),
-                        );
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.network(
-                                imageUrl,
-                                width: 64,
-                                height: 64,
-                                fit: BoxFit.cover,
-                                errorBuilder:
-                                    (_, __, ___) => Container(
-                                      width: 64,
-                                      height: 64,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.network(
+                                  imageUrl,
+                                  width:
+                                      isPortrait
+                                          ? screenSize.width * 0.16
+                                          : screenSize.height * 0.1,
+                                  height:
+                                      isPortrait
+                                          ? screenSize.width * 0.16
+                                          : screenSize.height * 0.1,
+                                  fit: BoxFit.cover,
+                                  loadingBuilder: (
+                                    context,
+                                    child,
+                                    loadingProgress,
+                                  ) {
+                                    if (loadingProgress == null) return child;
+                                    return Container(
+                                      width:
+                                          isPortrait
+                                              ? screenSize.width * 0.16
+                                              : screenSize.height * 0.1,
+                                      height:
+                                          isPortrait
+                                              ? screenSize.width * 0.16
+                                              : screenSize.height * 0.1,
                                       color: Colors.grey[300],
-                                      child: const Icon(
-                                        Icons.broken_image,
-                                        size: 24,
+                                      child: Center(
+                                        child: CircularProgressIndicator(
+                                          value:
+                                              loadingProgress
+                                                          .expectedTotalBytes !=
+                                                      null
+                                                  ? loadingProgress
+                                                          .cumulativeBytesLoaded /
+                                                      loadingProgress
+                                                          .expectedTotalBytes!
+                                                  : null,
+                                        ),
                                       ),
+                                    );
+                                  },
+                                  errorBuilder:
+                                      (_, __, ___) => Container(
+                                        width:
+                                            isPortrait
+                                                ? screenSize.width * 0.16
+                                                : screenSize.height * 0.1,
+                                        height:
+                                            isPortrait
+                                                ? screenSize.width * 0.16
+                                                : screenSize.height * 0.1,
+                                        color: Colors.grey[300],
+                                        child: Icon(
+                                          Icons.broken_image,
+                                          size: screenSize.width * 0.06,
+                                        ),
+                                      ),
+                                ),
+                              ),
+                              SizedBox(width: screenSize.width * 0.04),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(dateStr, style: dateTextStyle),
+                                    SizedBox(height: screenSize.height * 0.005),
+                                    Text(
+                                      event.title,
+                                      style: eventTitleStyle,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
+                                  ],
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(dateStr, style: _dateTextStyle),
-                                  const SizedBox(height: 4),
-                                  Text(event.title, style: _eventTitleStyle),
-                                ],
+                              SizedBox(width: screenSize.width * 0.02),
+                              Icon(
+                                Icons.chevron_right,
+                                size: screenSize.width * 0.06,
+                                color: Colors.black,
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            const Icon(
-                              Icons.chevron_right,
-                              size: 24,
-                              color: Colors.black,
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                ),
-            ],
+                      );
+                    },
+                  ),
+              ],
+            ),
           ),
         ),
       ),
