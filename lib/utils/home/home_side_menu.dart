@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../Groups/all_features.dart';
+import '../../screens/edit_profile/download_certificate.dart';
 import '../../screens/explore_page/activity_page/blog_details.dart';
 import '../../screens/home_screen.dart'; // Import your fetchBlogDetailsBySlug here
 
@@ -330,13 +331,19 @@ class _SideMenuWidgetState extends ConsumerState<SideMenuWidget> {
 
                 ListTile(
                   leading: Image.asset(
-                    'assets/images/m7.png',
-                    color: Colors.black,
-                    width: 24,
-                    height: 24,
+                    'assets/images/tfc1.png',
+                    width: 24, // adjust size as needed
+                    height: 24, // adjust size as needed
                   ),
                   title: const Text('Certificates', style: _titleStyle),
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CertificateDownloadScreen(),
+                      ),
+                    );
+                  },
                 ),
 
                 ListTile(
