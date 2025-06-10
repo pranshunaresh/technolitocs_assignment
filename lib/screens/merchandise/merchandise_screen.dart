@@ -69,7 +69,14 @@ class _MerchandiseState extends ConsumerState<Merchandise> {
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_outlined, color: Colors.black),
+          icon: ColorFiltered(
+            colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
+            child: Image.asset(
+              'assets/images/backward_arrow.png',
+              width: 24,
+              height: 24,
+            ),
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),

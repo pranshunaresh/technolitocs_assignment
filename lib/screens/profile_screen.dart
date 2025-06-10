@@ -6,6 +6,7 @@ import 'package:assihnment_technolitocs/screens/profile_edit.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../config/auth_service.dart' show AuthService;
+import 'edit_profile/download_certificate.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -266,9 +267,17 @@ class ProfileScreen extends StatelessWidget {
                       onTap: () {},
                     ),
                     _NavItem(
-                      icon: 'assets/images/Certificate.png',
-                      label: 'Download Certificate',
-                      onTap: () {},
+                      icon: 'assets/images/tfc1.png',
+                      label: 'Download Crtificate',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => const CertificateDownloadScreen(),
+                          ),
+                        );
+                      },
                     ),
                     _NavItem(
                       icon: Icons.support_agent_outlined,
