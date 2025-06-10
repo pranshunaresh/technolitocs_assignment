@@ -36,8 +36,15 @@ class _LoginScreenState extends State<LoginScreen> {
         body: jsonEncode({'mobileNumber': mobileNumber}),
       );
 
+      final res = jsonDecode(response.body);
+      print(res);
       if (response.statusCode == 200) {
-        return true;
+        if (res["status"] == true)
+          return true;
+        else {
+          _showSnackBar(res["message"]);
+          return false;
+        }
       } else {
         final error = jsonDecode(response.body);
         print('OTP Send Failed: ${error['message'] ?? 'Unknown error'}');
@@ -53,9 +60,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _showSnackBar(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(duration: Duration(seconds: 2), content: Text(message)),
+    );
   }
 
   void _onProceedPressed() async {
@@ -69,6 +76,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     final now = DateTime.now();
+
     if (_lastOtpSentTime != null) {
       final difference = now.difference(_lastOtpSentTime!);
       if (difference.inSeconds < 60) {

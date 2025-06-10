@@ -1,8 +1,10 @@
 import 'dart:async';
 
 // import 'package:assihnment_technolitocs/config/model/user_model.dart';
+import 'package:assihnment_technolitocs/config/model/user_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+// import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -88,7 +90,7 @@ class _OtpScreenState extends State<OtpScreen> {
     }
   }
 
-  Future<void> _handleOtpVerification() async {
+  Future<void> _handleOtpVerification(WidgetRef ref) async {
     String otp = _controller.text.trim();
     if (otp.length != 4) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -112,6 +114,7 @@ class _OtpScreenState extends State<OtpScreen> {
       final data = jsonDecode(response.body);
       if (response.statusCode == 200 && data["accessToken"] != null) {
         await _saveLoginCredentials(data["accessToken"]);
+
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => const HomeScreen()),
@@ -125,9 +128,8 @@ class _OtpScreenState extends State<OtpScreen> {
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("An error occurred. Please try again.")),
-      );
+      final str = e.toString();
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(str)));
     } finally {
       setState(() => _isLoading = false);
     }
@@ -141,180 +143,196 @@ class _OtpScreenState extends State<OtpScreen> {
     double paddingVertical = screenHeight * 0.05;
     double topPadding = screenHeight * 0.06;
 
-    return Scaffold(
-      backgroundColor: UI_COLORS.uiBgColor,
-      resizeToAvoidBottomInset: false,
-      appBar: AppBar(
-        backgroundColor: UI_COLORS.uiBgColor,
-        elevation: 0,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 15, top: 15),
-          child: IconButton(
-            icon: Image.asset(
-              'assets/images/backward_arrow.png',
-              width: 50,
-              height: 50,
-            ),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-        ),
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Container(
-              height: screenHeight * 0.33,
-              width: double.infinity,
-              padding: EdgeInsets.fromLTRB(
-                paddingHorizontal,
-                paddingVertical,
-                paddingHorizontal,
-                paddingVertical * 1.2,
+    return Consumer(
+      builder: (context, ref, child) {
+        // final profile = ref.read(directoryProfileProvider);
+
+        return Scaffold(
+          backgroundColor: UI_COLORS.uiBgColor,
+          resizeToAvoidBottomInset: true,
+          appBar: AppBar(
+            backgroundColor: UI_COLORS.uiBgColor,
+            elevation: 0,
+            leading: Padding(
+              padding: const EdgeInsets.only(left: 15, top: 15),
+              child: IconButton(
+                icon: Image.asset(
+                  'assets/images/backward_arrow.png',
+                  width: 50,
+                  height: 50,
+                ),
+                onPressed: () => Navigator.of(context).pop(),
               ),
-              color: UI_COLORS.uiBgColor,
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Positioned(
-                    right: -80,
-                    top: -45,
-                    child: Container(
-                      width: 193,
-                      height: 214,
-                      decoration: const BoxDecoration(shape: BoxShape.circle),
-                      child: Image.asset('assets/images/bubble.png'),
-                    ),
+            ),
+          ),
+          body: SafeArea(
+            child: Column(
+              children: [
+                Container(
+                  height: screenHeight * 0.33,
+                  width: double.infinity,
+                  padding: EdgeInsets.fromLTRB(
+                    paddingHorizontal,
+                    paddingVertical,
+                    paddingHorizontal,
+                    paddingVertical * 1.2,
                   ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      SizedBox(height: 24),
-                      Text(
-                        'VERIFICATION',
-                        style: TextStyle(
-                          color: Colors.white60,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w400,
-                          letterSpacing: 1.2,
+                  color: UI_COLORS.uiBgColor,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Positioned(
+                        right: -80,
+                        top: -45,
+                        child: Container(
+                          width: 193,
+                          height: 214,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                          ),
+                          child: Image.asset('assets/images/bubble.png'),
                         ),
                       ),
-                      SizedBox(height: 6),
-                      Text(
-                        'Enter OTP',
-                        style: TextStyle(
-                          color: UI_COLORS.uiWhiteColor,
-                          fontSize: 28,
-                          fontWeight: FontWeight.w400,
-                          fontFamily: 'Movatif',
-                        ),
-                      ),
-                      GradientText(
-                        text: "Received on your Number",
-                        fontSize: 28,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: const [
+                          SizedBox(height: 24),
+                          Text(
+                            'VERIFICATION',
+                            style: TextStyle(
+                              color: Colors.white60,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w400,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                          SizedBox(height: 6),
+                          Text(
+                            'Enter OTP',
+                            style: TextStyle(
+                              color: UI_COLORS.uiWhiteColor,
+                              fontSize: 28,
+                              fontWeight: FontWeight.w400,
+                              fontFamily: 'Movatif',
+                            ),
+                          ),
+                          GradientText(
+                            text: "Received on your Number",
+                            fontSize: 28,
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  Container(
-                    color: UI_COLORS.uiWhiteColor,
-                    width: double.infinity,
-                    padding: EdgeInsets.fromLTRB(
-                      paddingHorizontal,
-                      topPadding,
-                      paddingHorizontal,
-                      paddingVertical,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
-                          child: Row(
-                            children: [
-                              const Text(
-                                "Didn't receive the code?",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w400,
-                                  color: Color(0xff8B8B8B),
-                                  fontSize: 15,
-                                ),
+                ),
+                Expanded(
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Container(
+                        color: UI_COLORS.uiWhiteColor,
+                        width: double.infinity,
+                        padding: EdgeInsets.fromLTRB(
+                          paddingHorizontal,
+                          topPadding,
+                          paddingHorizontal,
+                          paddingVertical,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
                               ),
-                              const SizedBox(width: 10),
-                              GestureDetector(
-                                onTap: _isResendEnabled ? _resendOtp : null,
-                                child: Text(
-                                  "Resend OTP",
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w500,
-                                    color:
-                                        _isResendEnabled
-                                            ? const Color(0xff2DC0E4)
-                                            : Colors.grey,
-                                    fontSize: 16,
-                                    fontStyle: FontStyle.italic,
+                              child: Row(
+                                children: [
+                                  const Text(
+                                    "Didn't receive the code?",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w400,
+                                      color: Color(0xff8B8B8B),
+                                      fontSize: 15,
+                                    ),
                                   ),
-                                ),
+                                  const SizedBox(width: 10),
+                                  GestureDetector(
+                                    onTap: _isResendEnabled ? _resendOtp : null,
+                                    child: Text(
+                                      "Resend OTP",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                        color:
+                                            _isResendEnabled
+                                                ? const Color(0xff2DC0E4)
+                                                : Colors.grey,
+                                        fontSize: 16,
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Center(
-                          child: Text(
-                            _isResendEnabled
-                                ? "You can now request a new OTP."
-                                : "Resend available in $_secondsRemaining seconds",
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
                             ),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                        Consumer(
-                          builder:
-                              (context, ref, child) => SizedBox(
-                                width: 160,
-                                child: CustomButton(
-                                  onPressed:
-                                      !_isLoading
-                                          ? _handleOtpVerification
-                                          : null,
-                                  text:
-                                      _isLoading
-                                          ? "Verifying..."
-                                          : "Verify OTP",
-                                  Function: () {},
+                            const SizedBox(height: 5),
+                            Center(
+                              child: Text(
+                                _isResendEnabled
+                                    ? "You can now request a new OTP."
+                                    : "Resend available in $_secondsRemaining seconds",
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey,
                                 ),
                               ),
+                            ),
+                            const SizedBox(height: 15),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                      Positioned(
+                        top: -29,
+                        left: paddingHorizontal,
+                        right: paddingHorizontal,
+                        child: CustomTextField(
+                          controller: _controller,
+                          hintText: "Enter OTP",
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [],
+                          maxLength: 4,
+                        ),
+                      ),
+                      Positioned(
+                        left: 30,
+
+                        bottom: 20,
+                        child: SizedBox(
+                          width: 160,
+                          child: CustomButton(
+                            onPressed:
+                                !_isLoading
+                                    ? () async {
+                                      print("sent to handle otp");
+                                      await _handleOtpVerification(ref);
+                                      // print("/////////////////////////////////");
+                                      // print(ref.read(directoryProfileProvider)!.user );
+                                      // print(ref.read(directoryProfileProvider)!.accessToken);
+                                      // print("/////////////////////////////////");
+                                    }
+                                    : null,
+                            text: _isLoading ? "Verifying..." : "Verify OTP",
+                            Function: () {},
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  Positioned(
-                    top: -29,
-                    left: paddingHorizontal,
-                    right: paddingHorizontal,
-                    child: CustomTextField(
-                      controller: _controller,
-                      hintText: "Enter OTP",
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [],
-                      maxLength: 4,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

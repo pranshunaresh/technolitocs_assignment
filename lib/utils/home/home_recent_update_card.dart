@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class UpdateCardWidget extends StatelessWidget {
   final String title;
@@ -16,10 +17,16 @@ class UpdateCardWidget extends StatelessWidget {
     required this.bottomText,
   }) : super(key: key);
 
+  String formatApiDate(String dateStr) {
+    DateTime parsedDate = DateTime.parse(dateStr); // Parses ISO format
+    String formatted = DateFormat('MMMM d, yyyy').format(parsedDate);
+    return formatted;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(5),
       child: Center(
         child: Container(
           decoration: BoxDecoration(
@@ -64,7 +71,19 @@ class UpdateCardWidget extends StatelessWidget {
                     ),
                     child: Center(
                       child: Text(
-                        tagText,
+                        tagText
+                            .replaceAll(
+                              '_',
+                              ' ',
+                            ) // Replace underscores with spaces
+                            .split(' ') // Split into words
+                            .map(
+                              (word) =>
+                                  word.isNotEmpty
+                                      ? '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}'
+                                      : '',
+                            )
+                            .join(' '),
                         style: const TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w400,
@@ -74,7 +93,7 @@ class UpdateCardWidget extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    date,
+                    formatApiDate(date),
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w400,
@@ -92,25 +111,28 @@ class UpdateCardWidget extends StatelessWidget {
                   width: 360,
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
-                    return const Icon(
-                      Icons.broken_image,
-                      size: 50,
-                      color: Colors.grey,
-                    );
+                    // return const Icon(
+                    //   Icons.broken_image,
+                    //   size: 50,
+                    //   color: Colors.grey,
+                    // );
+                    return SizedBox(height: double.minPositive);
                   },
                 ),
               ),
               const SizedBox(height: 12),
-              Text(
-                bottomText,
-                style: const TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w400,
-                  color: Color(0xff5D5D5D),
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
+              bottomText.isNotEmpty
+                  ? Text(
+                    bottomText,
+                    style: const TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w400,
+                      color: Color(0xff5D5D5D),
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  )
+                  : SizedBox.shrink(),
             ],
           ),
         ),

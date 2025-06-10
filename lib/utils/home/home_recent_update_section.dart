@@ -1,7 +1,12 @@
 import 'dart:convert';
 
+import 'package:html/parser.dart' as html_parser;
+import 'package:assihnment_technolitocs/config/model/blog_details_model.dart';
+import 'package:assihnment_technolitocs/config/model/news_blog_event_model.dart';
+import 'package:assihnment_technolitocs/screens/explore_page/activity_page/blog_details.dart';
 import 'package:assihnment_technolitocs/utils/ui_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:html_unescape/html_unescape.dart';
 import 'package:http/http.dart' as http;
 
 import 'home_recent_update_card.dart';
@@ -14,11 +19,26 @@ class RecentUpdatesSection extends StatefulWidget {
 }
 
 class _RecentUpdatesSectionState extends State<RecentUpdatesSection> {
+  late List<dynamic> postCategoryList;
   Future<Map<String, dynamic>> getRecentUpdates() async {
-    final url = "https://api-iiacgv2.technolitics.com/api/v1/home/homeTimeline";
+    final url = "https://api.rolbol.org/api/v1/home/homeTimeline";
     final res = await http.get(Uri.parse(url));
     final data = jsonDecode(res.body);
+
     return data;
+  }
+
+  void updateListValues(dynamic data) async {
+    final list = data['data']['postData'];
+
+    recentUpdateButtons = [
+      "All Posts", // first index
+      ...list
+          .map((val) => val["postCategory"]?.toString() ?? "")
+          .toSet()
+          .toList(),
+    ];
+    setState(() {});
   }
 
   final Gradient textGradient = const LinearGradient(
@@ -26,21 +46,40 @@ class _RecentUpdatesSectionState extends State<RecentUpdatesSection> {
   );
 
   String removeAllHtmlTags(String htmlText) {
-    RegExp exp = RegExp(r"<[^>]*>", multiLine: true, caseSensitive: false);
-    return htmlText
-        .replaceAll(exp, '')
-        .replaceAll('&nbsp;', ' ')
-        .replaceAll('&amp;', '&');
+    // RegExp exp = RegExp(r"<[^>]*>", multiLine: true, caseSensitive: false);
+    // return htmlText
+    //     .replaceAll(exp, '')
+    //     .replaceAll('&nbsp;', ' ')
+    //     .replaceAll('&amp;', '&');
+    final document = html_parser.parse(htmlText);
+
+    // Extract text and preserve structure using outerHtml
+    final buffer = StringBuffer();
+    final unescape = HtmlUnescape();
+
+    for (var element in document.body!.children) {
+      buffer.writeln(unescape.convert(element.text.trim()));
+      buffer.writeln(); // Add newline between <p> tags
+    }
+
+    return buffer.toString().trim();
   }
 
   late var _future;
-
+  List<dynamic> recentUpdateButtons = ["All Posts"];
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    _future = getRecentUpdates();
+
+    setState(() {
+      _future = getRecentUpdates();
+    });
+
+    _future.then((value) => updateListValues(value));
   }
+
+  int recentUpdateButtonIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -69,61 +108,38 @@ class _RecentUpdatesSectionState extends State<RecentUpdatesSection> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 18),
               child: Row(
-                children: const [
-                  _NavTabContainer(text: 'All Posts', isSelected: true),
-                  SizedBox(width: 23),
-                  _NavTab(text: 'Events'),
-                  SizedBox(width: 23),
-                  _NavTab(text: 'Initiatives'),
-                  SizedBox(width: 23),
-                  _NavTab(text: 'Projects & CSR'),
-                  SizedBox(width: 18), // Right padding at end
-                ],
+                children: List.generate(
+                  recentUpdateButtons.length,
+                  (index) => GestureDetector(
+                    onTap: () {
+                      setState(() {
+                        recentUpdateButtonIndex = index;
+                      });
+                    },
+                    child: _NavTabContainer(
+                      text: recentUpdateButtons[index]
+                          .replaceAll(
+                            '_',
+                            ' ',
+                          ) // Replace underscores with spaces
+                          .split(' ') // Split into words
+                          .map(
+                            (word) =>
+                                word.isNotEmpty
+                                    ? '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}'
+                                    : '',
+                          )
+                          .join(' '),
+                      isSelected: index == recentUpdateButtonIndex,
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
 
-          // Update cards with reduced vertical spacing
-          const SizedBox(height: 12), // Reduced from 18 to 12
-          // const UpdateCardWidget(
-          //   title:
-          //       'Join our Community Donation Drive 2025 to help those in need!',
-          //   tagText: 'Food Donation',
-          //   date: 'April 8, 2025',
-          //   imagePath: 'assets/images/ru1.jpg',
-          //   bottomText:
-          //       'Be a part of our Community Donation Drive 2025! Together, we can make a difference in t...',
-          // ),
-          // const SizedBox(height: 8), // Reduced spacing between cards
-          // const UpdateCardWidget(
-          //   title:
-          //       'National Confrence 2025 : National Association Realtors India',
-          //   tagText: 'Conference',
-          //   date: 'April 6, 2025',
-          //   imagePath: 'assets/images/ru2.jpg',
-          //   bottomText:
-          //       'The National Conference 2022, hosted by the National Association of Realtors India, brough...',
-          // ),
-          // const SizedBox(height: 8), // Reduced spacing between cards
-          // const UpdateCardWidget(
-          //   title:
-          //       'Celebrating Unity: Yoga Day 2022 - A Journey Towards Wellness and Harmony for All',
-          //   tagText: 'Yoga Day',
-          //   date: 'April 8, 2025',
-          //   imagePath: 'assets/images/ru3.jpg',
-          //   bottomText:
-          //       'We invite you to participate in our Community Donation Drive 2023, a heartfelt initiative aime...',
-          // ),
-          // const SizedBox(height: 8), // Reduced spacing between cards
-          // const UpdateCardWidget(
-          //   title:
-          //       'Building Connections: A Fun Team Adventure to Strengthen Bonds and Collaboration Together!',
-          //   tagText: 'Event',
-          //   date: 'April 8, 2025',
-          //   imagePath: 'assets/images/ru4.jpg',
-          //   bottomText:
-          //       'Embarking on a Journey of Connection: Join us for an exciting team adventure designed to de...',
-          // ),
+          const SizedBox(height: 12),
+
           FutureBuilder(
             future: getRecentUpdates(),
             builder: (context, snapshot) {
@@ -143,21 +159,66 @@ class _RecentUpdatesSectionState extends State<RecentUpdatesSection> {
 
                   itemBuilder: (context, index) {
                     final data1 = data['data']['postData'][index];
+
                     // return Text(data1.toString());
-                    return UpdateCardWidget(
-                      title: data1['title'],
-                      tagText: data1['postCategory'],
-                      date: data1['createdAt'],
-                      imagePath: data1['bannerImage'],
-                      bottomText: removeAllHtmlTags(data1['description']),
-                    );
+                    // print(recentUpdateButtons[recentUpdateButtonIndex]);
+
+                    if (recentUpdateButtonIndex == 0 ||
+                        recentUpdateButtons[recentUpdateButtonIndex] ==
+                            data1["postCategory"]) {
+                      // print(data1);
+                      return GestureDetector(
+                        // onTap: ,
+                        onTap: () {
+                          // print(data1);
+                          final imageUrl =
+                              'https://technolitics-s3-bucket.s3.ap-south-1.amazonaws.com/rolbol-s3-bucket/${data1['bannerImage']}';
+
+                          final blogData = BlogData(
+                            description: removeAllHtmlTags(
+                              data1["description"],
+                            ),
+                            bannerVideo: data1['bannerVideo'],
+                            bannerType: data1['bannerType'],
+                            title: data1['title'],
+                            bannerImage: imageUrl,
+                            postDate: data1['createdAt'],
+                            moreDescription:
+                                (data1['moreDescriptions'] as List<dynamic>)
+                                    .map(
+                                      (item) => MoreDescription.fromJson(
+                                        item as Map<String, dynamic>,
+                                      ),
+                                    )
+                                    .toList(),
+                          );
+                          print(blogData.bannerType);
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => BlogDetails(blogData: blogData),
+                            ),
+                          );
+                        },
+
+                        child: UpdateCardWidget(
+                          title: data1['title'],
+                          tagText: data1['postCategory'],
+                          date: data1['createdAt'],
+                          imagePath: data1['bannerImage'],
+                          bottomText: removeAllHtmlTags(data1['description']),
+                        ),
+                      );
+                    } else {
+                      return SizedBox.shrink();
+                    }
                   },
                 );
               }
             },
           ),
 
-          SizedBox(height: 20),
+          SizedBox(height: 10),
           Padding(
             padding: const EdgeInsets.only(left: 18),
             child: Column(

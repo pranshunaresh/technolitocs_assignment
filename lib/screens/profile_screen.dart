@@ -1,7 +1,10 @@
+import 'package:assihnment_technolitocs/config/model/user_model.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:assihnment_technolitocs/config/auth_checker.dart';
 import 'package:assihnment_technolitocs/screens/profile_edit.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../config/auth_service.dart' show AuthService;
 
 class ProfileScreen extends StatelessWidget {
@@ -12,18 +15,21 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        width: 360,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          color: const Color(0xFFF3F4F6),
-        ),
-        child: SingleChildScrollView(
+    return Consumer(
+      builder: (context, ref, child) {
+        var profile = ref.watch(directoryProfileProvider);
+        return Container(
+          // width: 360,
+          constraints: BoxConstraints(
+            minHeight: MediaQuery.of(context).size.height,
+          ),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            color: const Color(0xFFF3F4F6),
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const SizedBox(height: 12),
               Stack(
                 clipBehavior: Clip.none,
                 children: [
@@ -41,100 +47,111 @@ class ProfileScreen extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                              ),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.menu_rounded,
-                                      size: 28,
-                                      color: Colors.white,
-                                    ),
-                                    onPressed: () {
-                                      Scaffold.of(context).openDrawer();
-                                    },
-                                  ),
-                                  Row(
-                                    children: [
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.end,
-                                        children: const [
-                                          Text(
-                                            'Hi There!',
-                                            style: TextStyle(
-                                              fontSize: 15,
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.w400,
-                                            ),
-                                          ),
-                                          SizedBox(height: 2),
-                                          Text(
-                                            'Rahul Dodeja',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.w400,
-                                              fontSize: 20,
-                                              color: Colors.white,
-                                              fontFamily: 'Movatif',
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(width: 8),
-                                      CircleAvatar(
-                                        radius: 24,
-                                        backgroundColor: Colors.grey.shade300,
-                                        child: CachedNetworkImage(
-                                          imageUrl: baseImageUrl,
-                                          imageBuilder:
-                                              (context, imageProvider) =>
-                                                  Container(
-                                                    decoration: BoxDecoration(
-                                                      shape: BoxShape.circle,
-                                                      image: DecorationImage(
-                                                        image: imageProvider,
-                                                        fit: BoxFit.cover,
-                                                      ),
-                                                    ),
-                                                  ),
-                                          placeholder:
-                                              (context, url) => const Icon(
-                                                Icons.person,
-                                                size: 24,
-                                                color: Colors.white,
-                                              ),
-                                          errorWidget:
-                                              (context, url, error) =>
-                                                  const Icon(
-                                                    Icons.person,
-                                                    size: 24,
-                                                    color: Colors.white,
-                                                  ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-                            const Text(
-                              'Rahul Dodeja',
+                            // Padding(
+                            //   padding: const EdgeInsets.symmetric(
+                            //     horizontal: 16,
+                            //   ),
+                            //   child: Row(
+                            //     mainAxisAlignment:
+                            //     MainAxisAlignment.spaceBetween,
+                            //     children: [
+                            //       IconButton(
+                            //         icon: const Icon(
+                            //           Icons.menu_rounded,
+                            //           size: 28,
+                            //           color: Colors.white,
+                            //         ),
+                            //         onPressed: () {
+                            //           Scaffold.of(context).openDrawer();
+                            //           // print(user!.accessToken);
+                            //         },
+                            //       ),
+                            //       Row(
+                            //         children: [
+                            //           Column(
+                            //             crossAxisAlignment:
+                            //             CrossAxisAlignment.end,
+                            //             children:  [
+                            //               Text(
+                            //                 'Hi There!',
+                            //                 style: TextStyle(
+                            //                   fontSize: 15,
+                            //                   color: Colors.white,
+                            //                   fontWeight: FontWeight.w400,
+                            //                 ),
+                            //               ),
+                            //               SizedBox(height: 2),
+                            //               Text(
+                            //                 profile!.name!,
+                            //                 style: TextStyle(
+                            //                   fontWeight: FontWeight.w400,
+                            //                   fontSize: 20,
+                            //                   color: Colors.white,
+                            //                   fontFamily: 'Movatif',
+                            //                 ),
+                            //               ),
+                            //             ],
+                            //           ),
+                            //           const SizedBox(width: 8),
+                            //           CircleAvatar(
+                            //             radius: 24,
+                            //             backgroundColor: Colors.grey.shade300,
+                            //             child: CachedNetworkImage(
+                            //               imageUrl: "${baseImageUrl}${profile.profilePicture}",
+                            //               imageBuilder:
+                            //                   (context, imageProvider) =>
+                            //                   Container(
+                            //                     decoration: BoxDecoration(
+                            //                       shape: BoxShape.circle,
+                            //                       image: DecorationImage(
+                            //                         image: imageProvider,
+                            //                         fit: BoxFit.cover,
+                            //                       ),
+                            //                     ),
+                            //                   ),
+                            //               placeholder:
+                            //                   (context, url) => const Icon(
+                            //                 Icons.person,
+                            //                 size: 24,
+                            //                 color: Colors.white,
+                            //               ),
+                            //               errorWidget:
+                            //                   (context, url, error) =>
+                            //               const Icon(
+                            //                 Icons.person,
+                            //                 size: 24,
+                            //                 color: Colors.white,
+                            //               ),
+                            //             ),
+                            //           ),
+                            //         ],
+                            //       ),
+                            //     ],
+                            //   ),
+                            // ),
+                            // const SizedBox(height: 24),
+                            Text(
+                              profile!.name!
+                                  .split(' ')
+                                  .map(
+                                    (word) =>
+                                        word.isEmpty
+                                            ? word
+                                            : '${word[0].toUpperCase()}${word.substring(1).toLowerCase()}',
+                                  )
+                                  .join(' '),
                               style: TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600,
-                                fontSize: 20,
-                                height: 1.2,
+                                fontSize: 28,
+                                // height: 1.2,
                               ),
                             ),
                             const SizedBox(height: 4),
-                            const Text(
-                              'Member, Raipur Chapter',
+                            Text(
+                              "${profile.rbChapterDesignationArray.length == 0 ? "" : profile.rbChapterDesignationArray[0].name}, "
+                              "${profile.chapters.length == 0 ? "" : profile.chapters[0].name + " " + profile.chapters[0].type[0].toUpperCase() + profile.chapters[0].type.substring(1).toLowerCase()} ",
+
                               style: TextStyle(
                                 color: Color(0xFFB0B0B0),
                                 fontSize: 16,
@@ -165,7 +182,8 @@ class ProfileScreen extends StatelessWidget {
                         ),
                         child: ClipOval(
                           child: CachedNetworkImage(
-                            imageUrl: baseImageUrl,
+                            imageUrl:
+                                "${baseImageUrl}${profile.profilePicture}",
                             width: 112,
                             height: 112,
                             fit: BoxFit.cover,
@@ -234,10 +252,11 @@ class ProfileScreen extends StatelessWidget {
                   ),
                 ],
               ),
+
               Padding(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 10,
+                  horizontal: 20,
+                  vertical: 12,
                 ),
                 child: Column(
                   children: [
@@ -298,8 +317,8 @@ class ProfileScreen extends StatelessWidget {
               const SizedBox(height: 48),
             ],
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -319,9 +338,11 @@ class _NavItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      splashColor: Colors.grey.withOpacity(0.2),
+
+      // splashColor: Colors.grey.withOpacity(0.2),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
+
         child: Row(
           children: [
             if (icon is String)
@@ -334,7 +355,7 @@ class _NavItem extends StatelessWidget {
             Text(
               label,
               style: const TextStyle(
-                fontSize: 14,
+                fontSize: 16,
                 color: Colors.black,
                 height: 1.2,
               ),

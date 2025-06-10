@@ -3,6 +3,8 @@ import 'package:assihnment_technolitocs/Screens/login_screen.dart';
 import 'package:assihnment_technolitocs/utils/ui_colors.dart';
 import 'package:assihnment_technolitocs/utils/ui_custom_text.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 
 class WalthroughScreen extends StatefulWidget {
   const WalthroughScreen({Key? key}) : super(key: key);
@@ -22,11 +24,19 @@ class _WalthroughScreenState extends State<WalthroughScreen> {
 
   final List<Map<String, String>> headingTexts = [
     {'normal': 'Making Rest of Life,\n', 'highlight': 'Best of Life.'},
-    {'normal': '', 'highlight': 'Social\n'},
-    {'normal': '', 'highlight': 'Learning\n'},
-    {'normal': '', 'highlight': 'Lifestyle\n'},
-    {'normal': '', 'highlight': 'Connect\n'},
+    {'normal': '\n', 'highlight': 'Social'},
+    {'normal': '\n', 'highlight': 'Learning'},
+    {'normal': '\n', 'highlight': 'Lifestyle'},
+    {'normal': '\n', 'highlight': 'Connect'},
   ];
+
+  //
+  // Future<List<String>> getWalkthroughImage()async{
+  //   final url = "http://api.rolbol.org/api/v1/banner/all/MOBILE_APP_SLIDER_BANNER";
+  //   final res = http.post(Uri.parse(url));
+  //
+  //
+  // }
 
   int currentIndex = 0;
   late final PageController _pageController;
@@ -80,19 +90,28 @@ class _WalthroughScreenState extends State<WalthroughScreen> {
 
     return Scaffold(
       backgroundColor: UI_COLORS.uiBgColor,
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.light,
+
+          statusBarBrightness: Brightness.dark,
+        ),
+      ),
       body: Stack(
         fit: StackFit.expand,
         children: [
           Image.asset('assets/images/bg.png', fit: BoxFit.cover),
           Center(
             child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: screenWidth * 0.06,
-              ), // Around 24px on 400px screen
+              padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.06),
+
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  SizedBox(height: 18),
+                  SizedBox(height: 10),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(
                       screenWidth * 0.75,
@@ -117,7 +136,7 @@ class _WalthroughScreenState extends State<WalthroughScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
 
                   // Dynamic Heading Text
                   RichText(
@@ -130,7 +149,13 @@ class _WalthroughScreenState extends State<WalthroughScreen> {
                         fontFamily: 'Movatif',
                       ),
                       children: [
-                        TextSpan(text: headingTexts[currentIndex]['normal']),
+                        TextSpan(
+                          text:
+                              headingTexts[currentIndex]['normal'] ==
+                                      headingTexts[currentIndex]['highlight']
+                                  ? null
+                                  : headingTexts[currentIndex]['normal'],
+                        ),
                         WidgetSpan(
                           child: GradientText(
                             text: headingTexts[currentIndex]['highlight']!,
@@ -141,7 +166,7 @@ class _WalthroughScreenState extends State<WalthroughScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 10),
 
                   // Indicator
                   Row(
@@ -152,7 +177,7 @@ class _WalthroughScreenState extends State<WalthroughScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 20),
 
                   Padding(
                     padding: const EdgeInsets.only(
@@ -170,9 +195,10 @@ class _WalthroughScreenState extends State<WalthroughScreen> {
                             fontWeight: FontWeight.w500,
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 15),
                         SizedBox(
                           width: double.infinity,
+                          height: 54,
                           child: ElevatedButton(
                             onPressed: () {
                               Navigator.push(
@@ -185,14 +211,17 @@ class _WalthroughScreenState extends State<WalthroughScreen> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: UI_COLORS.uiWhiteColor,
                               foregroundColor: Colors.black,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 17,
+                              ),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(50),
+                                borderRadius: BorderRadius.circular(35),
                               ),
-                              textStyle: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 12,
-                              ),
+                              // textStyle: const TextStyle(
+                              //   fontWeight: FontWeight.w700,
+                              //   fontSize: 16,
+                              // ),
                             ),
                             child: const Text(
                               'Continue as Guest',
@@ -203,9 +232,10 @@ class _WalthroughScreenState extends State<WalthroughScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 15),
                         SizedBox(
                           width: double.infinity,
+                          height: 54,
                           child: ElevatedButton(
                             onPressed: () {
                               Navigator.push(
@@ -218,14 +248,17 @@ class _WalthroughScreenState extends State<WalthroughScreen> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Color(0xff252424),
                               foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 17,
+                                horizontal: 10,
+                              ),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(50),
+                                borderRadius: BorderRadius.circular(35),
                               ),
-                              textStyle: const TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 12,
-                              ),
+                              // textStyle: const TextStyle(
+                              //   fontWeight: FontWeight.w700,
+                              //   fontSize: 16,
+                              // ),
                             ),
                             child: const Text(
                               'Already a Member ? Login',

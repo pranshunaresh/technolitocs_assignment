@@ -1,10 +1,12 @@
 import 'package:assihnment_technolitocs/config/auth_checker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_phoenix/flutter_phoenix.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'Screens/walkthrough_screen.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(Phoenix(child: ProviderScope(child: const MyApp())));
 }
 
 class MyApp extends StatelessWidget {
