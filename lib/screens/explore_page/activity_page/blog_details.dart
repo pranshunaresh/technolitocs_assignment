@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:html/parser.dart' as html_parser;
 import 'package:html_unescape/html_unescape.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 import '../../../config/model/blog_details_model.dart';
-import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
 class BlogDetails extends StatefulWidget {
   final BlogData blogData;
@@ -60,6 +60,11 @@ class _BlogDetailsState extends State<BlogDetails> {
       ),
     );
     blogData = widget.blogData;
+  }
+
+  String? convertToSeoSlug(String title) {
+    final slug = title.replaceAll(' ', '-').toLowerCase();
+    return slug;
   }
 
   String? extractYouTubeVideoId(String url) {
@@ -127,15 +132,15 @@ class _BlogDetailsState extends State<BlogDetails> {
     final TextStyle titleStyle = TextStyle(
       fontFamily: 'Movatif',
       fontWeight: FontWeight.bold,
-      fontSize: fontSize * 1.4,
+      fontSize: 20,
       color: Colors.black,
-      height: 1.3,
+      height: 2,
     );
 
     final TextStyle descriptionStyle = TextStyle(
-      fontFamily: 'Movatif',
-      fontSize: fontSize,
-      height: 1.6,
+      // fontFamily: 'Movatif',
+      fontSize: 16,
+      height: 1.5,
       color: Colors.black87,
     );
 
@@ -152,17 +157,27 @@ class _BlogDetailsState extends State<BlogDetails> {
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.share, color: Colors.black),
+              onPressed: () {
+                SharePlus.instance.share(
+                  ShareParams(
+                    uri: Uri.parse(
+                      "https://rolbol-website.vercel.app/events/${widget.blogData.seoSlug}",
+                    ),
+                  ),
+                );
+                // Handle share button press
+              },
+            ),
+          ],
           backgroundColor: Colors.white,
           elevation: 0,
           leading: IconButton(
-            icon: ImageIcon(
-              AssetImage('assets/images/backward_arrow.png'),
-              color: Colors.black,
-              size: 24,
-            ),
+            icon: const Icon(Icons.arrow_back, color: Colors.black),
             onPressed: () => Navigator.of(context).pop(),
           ),
-
           centerTitle: false,
           titleSpacing: 0,
         ),
@@ -178,9 +193,7 @@ class _BlogDetailsState extends State<BlogDetails> {
                 Image.network(
                   widget.blogData.bannerImage,
                   width: double.infinity,
-                  // height: screenWidth * 0.6,
                   fit: BoxFit.cover,
-
                   errorBuilder:
                       (context, error, stackTrace) => Container(
                         height: screenWidth * 0.6,
@@ -192,59 +205,61 @@ class _BlogDetailsState extends State<BlogDetails> {
                   widget.blogData.bannerVideo != '')
                 videoPlayer(widget.blogData.bannerVideo),
 
+              const SizedBox(height: 20),
+
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
-
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-
                   children: [
-                    SizedBox(height: padding),
                     Text(widget.blogData.postDate, style: dateStyle),
-                    SizedBox(height: padding * 0.5),
+                    const SizedBox(height: 12),
                     Text(widget.blogData.title, style: titleStyle),
-                    SizedBox(height: padding),
-                    Text(widget.blogData.description, style: descriptionStyle),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 12),
+
+                    if (widget.blogData.description != '') ...[
+                      Text(
+                        widget.blogData.description,
+                        style: descriptionStyle,
+                      ),
+                      const SizedBox(height: 12),
+                    ],
 
                     ListView.builder(
                       shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
+                      physics: const NeverScrollableScrollPhysics(),
                       itemCount: widget.blogData.moreDescription.length,
                       itemBuilder: (context, index) {
                         final item = widget.blogData.moreDescription[index];
-                        // print(item.description.toString()+ "/////////////////////////////${index}");
-
-                        try {
-                          print(item.description);
-                        } catch (e) {
-                          print("/////////////////////////// ${e}");
-                        }
                         return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            if (item.singleImage != '')
+                            if (item.singleImage.isNotEmpty) ...[
                               Image.network(
-                                width: double.infinity,
-
-                                fit: BoxFit.cover,
                                 linkImg + item.singleImage,
+                                width: double.infinity,
+                                fit: BoxFit.cover,
+                              ),
+                              const SizedBox(height: 20),
+                              // Text("after single image")
+                            ],
+
+                            if (item.description != '' &&
+                                removeAllHtmlTags(
+                                  item.description.toString(),
+                                ).isNotEmpty) ...[
+                              Text(
+                                removeAllHtmlTags(item.description.toString()),
+                                style: descriptionStyle,
                               ),
 
-                            Text(
-                              removeAllHtmlTags(item.description.toString()),
-                            ),
+                              const SizedBox(height: 20),
+                            ],
 
-                            SizedBox(height: 20),
-
-                            if (item.multipleImages.length > 0)
+                            if (item.multipleImages.isNotEmpty) ...[
                               _imageGrid(item.multipleImages),
-
-                            SizedBox(height: 20),
-                            // Image.network(
-                            //     linkImg+item.multipleImages[index]
-                            // ),
-                            // Text(index.toString()),
-                            // Text(item.multipleImages.length.toString())
+                              const SizedBox(height: 20),
+                            ],
                           ],
                         );
                       },
@@ -275,6 +290,18 @@ class _BlogDetailsState extends State<BlogDetails> {
                   // size: 50,
                   color: Colors.grey,
                 ),
+            loadingBuilder: (
+              BuildContext context,
+              Widget child,
+              ImageChunkEvent? loadingProgress,
+            ) {
+              if (loadingProgress == null) return child;
+              return Container(
+                width: double.infinity,
+                height: 300,
+                color: Colors.grey,
+              );
+            },
           ),
         );
       case 2:
@@ -302,6 +329,18 @@ class _BlogDetailsState extends State<BlogDetails> {
                     errorBuilder:
                         (_, _, _) =>
                             const Icon(Icons.broken_image, color: Colors.grey),
+                    loadingBuilder: (
+                      BuildContext context,
+                      Widget child,
+                      ImageChunkEvent? loadingProgress,
+                    ) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        width: MediaQuery.of(context).size.width / 2 - 25,
+                        height: 300,
+                        color: Colors.grey,
+                      );
+                    },
                   ),
                 ),
               ),
@@ -327,6 +366,18 @@ class _BlogDetailsState extends State<BlogDetails> {
                     errorBuilder:
                         (_, _, _) =>
                             const Icon(Icons.broken_image, color: Colors.grey),
+                    loadingBuilder: (
+                      BuildContext context,
+                      Widget child,
+                      ImageChunkEvent? loadingProgress,
+                    ) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        width: MediaQuery.of(context).size.width / 2 - 25,
+                        height: double.infinity,
+                        color: Colors.grey,
+                      );
+                    },
                   ),
                 ),
               ),
@@ -362,6 +413,18 @@ class _BlogDetailsState extends State<BlogDetails> {
                               Icons.broken_image,
                               color: Colors.grey,
                             ),
+                        loadingBuilder: (
+                          BuildContext context,
+                          Widget child,
+                          ImageChunkEvent? loadingProgress,
+                        ) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            // width: double.infinity,
+                            height: 170,
+                            color: Colors.grey,
+                          );
+                        },
                       ),
                     ),
                   ),
@@ -389,6 +452,18 @@ class _BlogDetailsState extends State<BlogDetails> {
                               Icons.broken_image,
                               color: Colors.grey,
                             ),
+                        loadingBuilder: (
+                          BuildContext context,
+                          Widget child,
+                          ImageChunkEvent? loadingProgress,
+                        ) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            // width: double.infinity,
+                            height: 220,
+                            color: Colors.grey,
+                          );
+                        },
                       ),
                     ),
                   ),
@@ -416,13 +491,26 @@ class _BlogDetailsState extends State<BlogDetails> {
                     errorBuilder:
                         (_, _, _) =>
                             const Icon(Icons.broken_image, color: Colors.grey),
+                    loadingBuilder: (
+                      BuildContext context,
+                      Widget child,
+                      ImageChunkEvent? loadingProgress,
+                    ) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        // width: double.infinity,
+                        height: 400,
+                        color: Colors.grey,
+                      );
+                    },
                   ),
                 ),
               ),
             ],
           ),
         );
-      default:
+
+      case 4:
         return SizedBox(
           height: 400,
           child: Row(
@@ -451,6 +539,18 @@ class _BlogDetailsState extends State<BlogDetails> {
                               Icons.broken_image,
                               color: Colors.grey,
                             ),
+                        loadingBuilder: (
+                          BuildContext context,
+                          Widget child,
+                          ImageChunkEvent? loadingProgress,
+                        ) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            // width: double.infinity,
+                            height: 180,
+                            color: Colors.grey,
+                          );
+                        },
                       ),
                     ),
                   ),
@@ -478,6 +578,18 @@ class _BlogDetailsState extends State<BlogDetails> {
                               Icons.broken_image,
                               color: Colors.grey,
                             ),
+                        loadingBuilder: (
+                          BuildContext context,
+                          Widget child,
+                          ImageChunkEvent? loadingProgress,
+                        ) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            // width: double.infinity,
+                            height: 210,
+                            color: Colors.grey,
+                          );
+                        },
                       ),
                     ),
                   ),
@@ -509,6 +621,18 @@ class _BlogDetailsState extends State<BlogDetails> {
                               Icons.broken_image,
                               color: Colors.grey,
                             ),
+                        loadingBuilder: (
+                          BuildContext context,
+                          Widget child,
+                          ImageChunkEvent? loadingProgress,
+                        ) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            // width: double.infinity,
+                            height: 150,
+                            color: Colors.grey,
+                          );
+                        },
                       ),
                     ),
                   ),
@@ -546,6 +670,203 @@ class _BlogDetailsState extends State<BlogDetails> {
                                     color: Colors.grey,
                                   ),
                                 ),
+                            loadingBuilder: (
+                              BuildContext context,
+                              Widget child,
+                              ImageChunkEvent? loadingProgress,
+                            ) {
+                              if (loadingProgress == null) return child;
+                              return Container(
+                                // width: double.infinity,
+                                // height: 300,
+                                height: 240,
+                                color: Colors.grey,
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+
+      default:
+        return SizedBox(
+          height: 400,
+          child: Row(
+            children: [
+              Column(
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder:
+                              (context) =>
+                                  SwipeImages(images: images, currentIndex: 0),
+                        ),
+                      );
+                    },
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        width: MediaQuery.of(context).size.width / 2 - 25,
+                        height: 180,
+                        fit: BoxFit.cover,
+                        linkImg + images[0],
+                        errorBuilder:
+                            (_, _, _) => const Icon(
+                              Icons.broken_image,
+                              color: Colors.grey,
+                            ),
+                        loadingBuilder: (
+                          BuildContext context,
+                          Widget child,
+                          ImageChunkEvent? loadingProgress,
+                        ) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            // width: double.infinity,
+                            height: 180,
+                            color: Colors.grey,
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 10),
+
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder:
+                              (context) =>
+                                  SwipeImages(images: images, currentIndex: 2),
+                        ),
+                      );
+                    },
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        width: MediaQuery.of(context).size.width / 2 - 25,
+                        height: 210,
+                        fit: BoxFit.cover,
+                        linkImg + images[2],
+                        errorBuilder:
+                            (_, _, _) => const Icon(
+                              Icons.broken_image,
+                              color: Colors.grey,
+                            ),
+                        loadingBuilder: (
+                          BuildContext context,
+                          Widget child,
+                          ImageChunkEvent? loadingProgress,
+                        ) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            // width: double.infinity,
+                            height: 210,
+                            color: Colors.grey,
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(width: 10),
+
+              Column(
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder:
+                              (context) =>
+                                  SwipeImages(images: images, currentIndex: 1),
+                        ),
+                      );
+                    },
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        width: MediaQuery.of(context).size.width / 2 - 25,
+                        height: 150,
+                        fit: BoxFit.cover,
+                        linkImg + images[1],
+                        errorBuilder:
+                            (_, _, _) => const Icon(
+                              Icons.broken_image,
+                              color: Colors.grey,
+                            ),
+                        loadingBuilder: (
+                          BuildContext context,
+                          Widget child,
+                          ImageChunkEvent? loadingProgress,
+                        ) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            // width: double.infinity,
+                            height: 150,
+                            color: Colors.grey,
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 10),
+
+                  Stack(
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder:
+                                  (context) => SwipeImages(
+                                    images: images,
+                                    currentIndex: 3,
+                                  ),
+                            ),
+                          );
+                        },
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            width: MediaQuery.of(context).size.width / 2 - 25,
+                            height: 240,
+                            fit: BoxFit.cover,
+
+                            linkImg + images[3],
+
+                            errorBuilder:
+                                (_, _, _) => FittedBox(
+                                  fit: BoxFit.cover,
+                                  child: const Icon(
+                                    Icons.broken_image,
+                                    // size:100,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                            loadingBuilder: (
+                              BuildContext context,
+                              Widget child,
+                              ImageChunkEvent? loadingProgress,
+                            ) {
+                              if (loadingProgress == null) return child;
+                              return Container(
+                                // width: double.infinity,
+                                // height: 300,
+                                height: 240,
+                                color: Colors.grey,
+                              );
+                            },
                           ),
                         ),
                       ),
@@ -630,6 +951,7 @@ class _SwipeImagesState extends State<SwipeImages> {
                 });
               },
               minScale: 0.5,
+              maxScale: 5.0,
               panEnabled: true,
               child: Image.network(
                 height: double.infinity,

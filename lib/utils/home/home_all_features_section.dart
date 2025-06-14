@@ -1,15 +1,30 @@
+import 'package:assihnment_technolitocs/Groups/all_features.dart';
+import 'package:assihnment_technolitocs/screens/rolbol_talks_screen.dart';
+import 'package:assihnment_technolitocs/utils/gallary/food_donation.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:marquee/marquee.dart';
 
-class AllFeatureSection extends StatelessWidget {
-  const AllFeatureSection({Key? key}) : super(key: key);
+import '../../screens/home_screen.dart';
 
-  @override
-  Widget build(BuildContext context) {
-    return _buildFeatureButtons();
+class AllFeatureSection extends ConsumerWidget {
+  final VoidCallback onScrollToD;
+
+  const AllFeatureSection({Key? key, required this.onScrollToD})
+    : super(key: key);
+
+  void onTabSelected(int index, WidgetRef ref) {
+    final selectedTabIndex = ref.read(selectedTabProvider);
+    if (selectedTabIndex == index) return;
+
+    previousTabIndex = selectedTabIndex;
+    ref.read(selectedTabProvider.notifier).state = index;
+    showAppBar = index != 3;
   }
 
-  Widget _buildFeatureButtons() {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       children: [
         Padding(
@@ -17,7 +32,7 @@ class AllFeatureSection extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'All Features',
                 style: TextStyle(
                   fontWeight: FontWeight.w400,
@@ -26,8 +41,15 @@ class AllFeatureSection extends StatelessWidget {
                   fontFamily: "Movatif",
                 ),
               ),
+
               TextButton.icon(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const AllFeatures(),
+                    ),
+                  );
+                },
                 icon: const Text(
                   'See All',
                   style: TextStyle(
@@ -63,6 +85,7 @@ class AllFeatureSection extends StatelessWidget {
                   label: 'Events',
                   onTap: () {
                     print('Events tapped');
+                    onTabSelected(2, ref);
                   },
                 ),
                 const SizedBox(width: 12),
@@ -70,7 +93,9 @@ class AllFeatureSection extends StatelessWidget {
                   icon: Icons.auto_awesome_outlined,
                   label: 'Projects & CSR',
                   onTap: () {
-                    print('Projects & CSR tapped');
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (context) => FoodDonation()),
+                    );
                   },
                 ),
                 const SizedBox(width: 12),
@@ -79,6 +104,14 @@ class AllFeatureSection extends StatelessWidget {
                   label: 'Rolbol Talk',
                   onTap: () {
                     print('Rolbol Talk tapped');
+
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder:
+                            (context) =>
+                                RolbolTalksScreen(title: "Rolbol Talks"),
+                      ),
+                    );
                   },
                 ),
                 const SizedBox(width: 12),
@@ -86,6 +119,14 @@ class AllFeatureSection extends StatelessWidget {
                   icon: CupertinoIcons.circle_righthalf_fill,
                   label: 'Conclaves',
                   onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder:
+                            (context) =>
+                                RolbolTalksScreen(title: "Rolbol Conclave"),
+                      ),
+                    );
+
                     print('Conclaves Talk tapped');
                   },
                 ),
@@ -130,6 +171,72 @@ class AllFeatureSection extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class AutoScrollText extends StatelessWidget {
+  final String text;
+  final double fontSize;
+
+  const AutoScrollText({super.key, required this.text, this.fontSize = 16});
+
+  bool isOverflowing({
+    required String text,
+    required double fontSize,
+    required double maxWidth,
+    required BuildContext context,
+  }) {
+    final TextPainter textPainter = TextPainter(
+      text: TextSpan(text: text, style: TextStyle(fontSize: fontSize)),
+      maxLines: 1,
+      textDirection: TextDirection.ltr,
+    )..layout(maxWidth: double.infinity);
+
+    return textPainter.width > maxWidth;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxWidth = constraints.maxWidth;
+        final shouldScroll = isOverflowing(
+          text: text,
+          fontSize: fontSize,
+          maxWidth: maxWidth,
+          context: context,
+        );
+
+        return SizedBox(
+          width: maxWidth,
+          height: fontSize + 10, // adjust if needed
+          child:
+              shouldScroll
+                  ? Marquee(
+                    text: text,
+                    style: TextStyle(
+                      fontSize: fontSize,
+                      fontFamily: "Movatif",
+                      fontWeight: FontWeight.w400,
+                      color: Colors.black,
+                    ),
+                    velocity: 30,
+                    blankSpace: 30,
+                    pauseAfterRound: Duration(seconds: 1),
+                  )
+                  : Text(
+                    text,
+                    style: TextStyle(
+                      fontSize: fontSize,
+                      fontFamily: "Movatif",
+                      fontWeight: FontWeight.w400,
+                      color: Colors.black,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+        );
+      },
     );
   }
 }

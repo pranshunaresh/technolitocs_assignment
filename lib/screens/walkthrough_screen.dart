@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:assihnment_technolitocs/Screens/login_screen.dart';
+import 'package:assihnment_technolitocs/screens/home_screen.dart';
 import 'package:assihnment_technolitocs/utils/ui_colors.dart';
 import 'package:assihnment_technolitocs/utils/ui_custom_text.dart';
 import 'package:flutter/material.dart';
@@ -201,10 +202,9 @@ class _WalthroughScreenState extends State<WalthroughScreen> {
                           height: 54,
                           child: ElevatedButton(
                             onPressed: () {
-                              Navigator.push(
-                                context,
+                              Navigator.of(context).pushReplacement(
                                 MaterialPageRoute(
-                                  builder: (context) => LoginScreen(),
+                                  builder: (context) => HomeScreen(),
                                 ),
                               );
                             },
@@ -218,11 +218,8 @@ class _WalthroughScreenState extends State<WalthroughScreen> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(35),
                               ),
-                              // textStyle: const TextStyle(
-                              //   fontWeight: FontWeight.w700,
-                              //   fontSize: 16,
-                              // ),
                             ),
+
                             child: const Text(
                               'Continue as Guest',
                               style: TextStyle(

@@ -54,6 +54,8 @@ class UpdateCardWidget extends StatelessWidget {
                   fontFamily: 'Movatif',
                   height: 1.3,
                 ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 12),
               Row(

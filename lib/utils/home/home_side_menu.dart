@@ -1,15 +1,22 @@
 import 'package:assihnment_technolitocs/config/model/user_model.dart';
+import 'package:assihnment_technolitocs/screens/explore_page/activity_page/activities_screen.dart';
 import 'package:assihnment_technolitocs/screens/merchandise/merchandise_screen.dart';
+import 'package:assihnment_technolitocs/screens/rolbol_talks_screen.dart';
+import 'package:assihnment_technolitocs/utils/gallary/food_donation.dart';
 import 'package:assihnment_technolitocs/utils/gallary/gallary.dart';
+import 'package:assihnment_technolitocs/utils/home/home_recent_update_section.dart';
 import 'package:assihnment_technolitocs/utils/ui_colors.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../Groups/all_features.dart';
-import '../../screens/edit_profile/download_certificate.dart';
+import '../../screens/download_certificate.dart';
+// import '../../screens/edit_profile/download_certificate.dart';
 import '../../screens/explore_page/activity_page/blog_details.dart';
-import '../../screens/home_screen.dart'; // Import your fetchBlogDetailsBySlug here
+import '../../screens/home_screen.dart';
+import '../../screens/profile_enquiry_screen.dart';
 
 class SideMenuWidget extends ConsumerStatefulWidget {
   const SideMenuWidget({Key? key}) : super(key: key);
@@ -22,6 +29,7 @@ class _SideMenuWidgetState extends ConsumerState<SideMenuWidget> {
   bool initiativesExpanded = false;
   bool projectsExpanded = false;
   bool insightsExpanded = false;
+  bool membersExpanded = false;
 
   void onTabSelected(int index) {
     final selectedTabIndex = ref.watch(selectedTabProvider);
@@ -57,13 +65,12 @@ class _SideMenuWidgetState extends ConsumerState<SideMenuWidget> {
                           width: 40,
                           child: CircleAvatar(
                             radius: 40,
-                            // backgroundColor: Colors.blue[700],
                             child: ClipRRect(
                               borderRadius: BorderRadius.all(
                                 Radius.circular(30),
                               ),
                               child: Image.network(
-                                'https://technolitics-s3-bucket.s3.ap-south-1.amazonaws.com/rolbol-s3-bucket/${profile!.profilePicture}',
+                                'https://technolitics-s3-bucket.s3.ap-south-1.amazonaws.com/rolbol-s3-bucket/${profile != null ? profile.profilePicture : ''}',
                                 width: 48,
                                 height: 48,
                                 fit: BoxFit.cover,
@@ -72,9 +79,7 @@ class _SideMenuWidgetState extends ConsumerState<SideMenuWidget> {
                                     width: 48,
                                     height: 48,
                                     color: Colors.grey[300],
-                                    child:
-                                    // Text(e.toString()),
-                                    const Icon(Icons.person, size: 24),
+                                    child: const Icon(Icons.person, size: 24),
                                   );
                                 },
                               ),
@@ -85,26 +90,28 @@ class _SideMenuWidgetState extends ConsumerState<SideMenuWidget> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // if(profile!=null)
                             Text(
-                              profile.name!,
-                              style: TextStyle(
+                              profile != null ? profile.name! : "Guest",
+                              style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16.5,
                                 color: Color(0xFF1F2937),
                                 fontFamily: 'NotoSans',
                               ),
                             ),
-                            SizedBox(height: 2),
-                            Text(
-                              "${profile.chapters.length == 0 ? "" : profile.chapters[0].name}, "
-                              "${profile.rbChapterDesignationArray.length == 0 ? "" : profile.rbChapterDesignationArray[0].name} ",
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.black,
-                                fontFamily: 'NotoSans',
-                                fontWeight: FontWeight.w400,
+                            const SizedBox(height: 2),
+                            if (profile != null)
+                              Text(
+                                "${profile.chapters.isEmpty ? "" : profile.chapters[0].name}, "
+                                "${profile.rbChapterDesignationArray.isEmpty ? "" : profile.rbChapterDesignationArray[0].name} ",
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.black,
+                                  fontFamily: 'NotoSans',
+                                  fontWeight: FontWeight.w400,
+                                ),
                               ),
-                            ),
                           ],
                         ),
                       ],
@@ -121,6 +128,7 @@ class _SideMenuWidgetState extends ConsumerState<SideMenuWidget> {
                 ),
                 const SizedBox(height: 24),
 
+                // All Features
                 ListTile(
                   leading: Image.asset(
                     'assets/images/m1.png',
@@ -130,6 +138,7 @@ class _SideMenuWidgetState extends ConsumerState<SideMenuWidget> {
                   ),
                   title: const Text('All Features', style: _titleStyle),
                   onTap: () {
+                    Scaffold.of(context).closeDrawer();
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -139,6 +148,7 @@ class _SideMenuWidgetState extends ConsumerState<SideMenuWidget> {
                   },
                 ),
 
+                // Initiatives
                 ExpansionTile(
                   initiallyExpanded: initiativesExpanded,
                   onExpansionChanged:
@@ -157,18 +167,97 @@ class _SideMenuWidgetState extends ConsumerState<SideMenuWidget> {
                     color: Colors.black,
                     size: 20,
                   ),
-                  children: const [
-                    _SubMenuItem('Robol talks'),
-                    _SubMenuItem('Coffee Date'),
-                    _SubMenuItem('Tribe'),
-                    _SubMenuItem('Robol Film Festival'),
-                    _SubMenuItem('Robol Conclave'),
-                    _SubMenuItem('Rolbol Podcast'),
-                    _SubMenuItem('Robol Retreats'),
+                  children: [
+                    _SubMenuItem(
+                      'Rolbol talks',
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder:
+                                (context) =>
+                                    RolbolTalksScreen(title: "Rolbol Talks"),
+                          ),
+                        );
+                      },
+                    ),
+                    _SubMenuItem(
+                      'Coffee Date',
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder:
+                                (context) =>
+                                    RolbolTalksScreen(title: "Coffee Date"),
+                          ),
+                        );
+                      },
+                    ),
+                    _SubMenuItem(
+                      'Tribe',
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder:
+                                (context) => RolbolTalksScreen(title: "Tribe"),
+                          ),
+                        );
+                      },
+                    ),
+
+                    _SubMenuItem(
+                      'Robol Film Festival',
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder:
+                                (context) => RolbolTalksScreen(
+                                  title: "Robol Film Festival",
+                                ),
+                          ),
+                        );
+                      },
+                    ),
+                    _SubMenuItem(
+                      'Robol Conclave',
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder:
+                                (context) =>
+                                    RolbolTalksScreen(title: "Robol Conclave"),
+                          ),
+                        );
+                      },
+                    ),
+                    _SubMenuItem(
+                      'Rolbol Podcast',
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder:
+                                (context) =>
+                                    RolbolTalksScreen(title: "Rolbol Podcast"),
+                          ),
+                        );
+                      },
+                    ),
+                    _SubMenuItem(
+                      'Robol Retreats',
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder:
+                                (context) =>
+                                    RolbolTalksScreen(title: "Robol Retreats"),
+                          ),
+                        );
+                      },
+                    ),
                   ],
                   childrenPadding: const EdgeInsets.only(left: 36),
                 ),
 
+                // Project & CSR
                 ExpansionTile(
                   initiallyExpanded: projectsExpanded,
                   onExpansionChanged:
@@ -186,8 +275,18 @@ class _SideMenuWidgetState extends ConsumerState<SideMenuWidget> {
                     color: Colors.black,
                     size: 20,
                   ),
-                  children: const [
-                    _SubMenuItem('Food Donation'),
+                  children: [
+                    _SubMenuItem(
+                      'Food Donation',
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const FoodDonation(),
+                          ),
+                        );
+                      },
+                    ),
                     _SubMenuItem('Health Camp'),
                     _SubMenuItem('Blood Donation'),
                     _SubMenuItem('Girls Safety and Hygiene'),
@@ -197,10 +296,12 @@ class _SideMenuWidgetState extends ConsumerState<SideMenuWidget> {
                   ],
                   childrenPadding: const EdgeInsets.only(left: 36),
                 ),
+
+                // Members
                 ExpansionTile(
-                  initiallyExpanded: projectsExpanded,
+                  initiallyExpanded: membersExpanded,
                   onExpansionChanged:
-                      (val) => setState(() => projectsExpanded = val),
+                      (val) => setState(() => membersExpanded = val),
                   leading: const Icon(
                     CupertinoIcons.profile_circled,
                     size: 20,
@@ -208,7 +309,7 @@ class _SideMenuWidgetState extends ConsumerState<SideMenuWidget> {
                   ),
                   title: const Text('Members', style: _titleStyle),
                   trailing: Icon(
-                    projectsExpanded
+                    membersExpanded
                         ? Icons.keyboard_arrow_up
                         : Icons.keyboard_arrow_down_rounded,
                     color: Colors.black,
@@ -220,10 +321,6 @@ class _SideMenuWidgetState extends ConsumerState<SideMenuWidget> {
                       onTap: () {
                         onTabSelected(1);
                         Navigator.of(context).pop();
-
-                        // setState(() {
-                        //
-                        // });
                       },
                     ),
                     _SubMenuItem(
@@ -231,16 +328,13 @@ class _SideMenuWidgetState extends ConsumerState<SideMenuWidget> {
                       onTap: () {
                         onTabSelected(1);
                         Navigator.of(context).pop();
-
-                        // setState(() {
-                        //
-                        // });
                       },
                     ),
                   ],
                   childrenPadding: const EdgeInsets.only(left: 36),
                 ),
 
+                // Insights
                 ExpansionTile(
                   initiallyExpanded: insightsExpanded,
                   onExpansionChanged:
@@ -271,53 +365,96 @@ class _SideMenuWidgetState extends ConsumerState<SideMenuWidget> {
                         );
                       },
                     ),
-                    const _SubMenuItem('Events'),
-
-                    // Updated Blogs item with async fetch and navigation
                     _SubMenuItem(
-                      'Blogs',
-                      onTap: () async {
-                        // Show a loading dialog while fetching blog data
-                        showDialog(
-                          context: context,
-                          barrierDismissible: false,
-                          builder:
-                              (_) => const Center(
-                                child: CircularProgressIndicator(),
-                              ),
-                        );
-
-                        final blogData = await fetchBlogDetailsBySlug(
-                          "mindful-living--take-control-of-stress,-unl...",
-                        );
-
-                        Navigator.pop(context); // Remove loading dialog
-
-                        if (blogData != null) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder:
-                                  (context) => BlogDetails(blogData: blogData),
-                            ),
-                          );
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Failed to load blog details'),
-                            ),
-                          );
-                        }
+                      'Events',
+                      onTap: () {
+                        Scaffold.of(context).closeDrawer();
+                        onTabSelected(2);
                       },
                     ),
-
-                    const _SubMenuItem('News'),
+                    _SubMenuItem(
+                      'Blogs',
+                      onTap: () {
+                        Scaffold.of(context).closeDrawer();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => Scaffold(
+                                  backgroundColor: Colors.white,
+                                  appBar: AppBar(
+                                    backgroundColor: Colors.transparent,
+                                    title: Text(
+                                      "Blogs",
+                                      style: TextStyle(fontFamily: "Movatif"),
+                                    ),
+                                    centerTitle: true,
+                                    systemOverlayStyle: SystemUiOverlayStyle(
+                                      statusBarColor: Colors.white,
+                                      statusBarIconBrightness: Brightness.dark,
+                                      statusBarBrightness: Brightness.light,
+                                    ),
+                                  ),
+                                  body: SafeArea(
+                                    child: SingleChildScrollView(
+                                      child: Container(
+                                        padding: const EdgeInsets.only(top: .0),
+                                        child: ActivityScreen(
+                                          categoryOfEvent: "BLOGS",
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                          ),
+                        );
+                      },
+                    ),
+                    _SubMenuItem(
+                      'News',
+                      onTap: () {
+                        Scaffold.of(context).closeDrawer();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => Scaffold(
+                                  backgroundColor: Colors.white,
+                                  appBar: AppBar(
+                                    backgroundColor: Colors.transparent,
+                                    title: Text(
+                                      "News",
+                                      style: TextStyle(fontFamily: "Movatif"),
+                                    ),
+                                    centerTitle: true,
+                                    systemOverlayStyle: SystemUiOverlayStyle(
+                                      statusBarColor: Colors.white,
+                                      statusBarIconBrightness: Brightness.dark,
+                                      statusBarBrightness: Brightness.light,
+                                    ),
+                                  ),
+                                  body: SafeArea(
+                                    child: SingleChildScrollView(
+                                      child: Container(
+                                        padding: const EdgeInsets.only(top: .0),
+                                        child: ActivityScreen(
+                                          categoryOfEvent: "NEWS",
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                          ),
+                        );
+                      },
+                    ),
                     const _SubMenuItem('Spotlight'),
                     const _SubMenuItem('Poll'),
                   ],
                   childrenPadding: const EdgeInsets.only(left: 36),
                 ),
 
+                // Profile Inquiries
                 ListTile(
                   leading: Image.asset(
                     'assets/images/m6.png',
@@ -325,15 +462,22 @@ class _SideMenuWidgetState extends ConsumerState<SideMenuWidget> {
                     width: 24,
                     height: 24,
                   ),
-                  title: const Text('Profile Inquiries', style: _titleStyle),
-                  onTap: () {},
+                  title: const Text('Profile Enquiries', style: _titleStyle),
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => ProfileEnquiryScreen(),
+                      ),
+                    );
+                  },
                 ),
 
+                // Certificates
                 ListTile(
                   leading: Image.asset(
-                    'assets/images/tfc1.png',
-                    width: 24, // adjust size as needed
-                    height: 24, // adjust size as needed
+                    'assets/images/Certificate.png',
+                    width: 24,
+                    height: 24,
                   ),
                   title: const Text('Certificates', style: _titleStyle),
                   onTap: () {
@@ -346,8 +490,9 @@ class _SideMenuWidgetState extends ConsumerState<SideMenuWidget> {
                   },
                 ),
 
+                // Merchandise
                 ListTile(
-                  leading: Icon(Icons.checkroom),
+                  leading: const Icon(Icons.checkroom),
                   title: const Text('Merchandise', style: _titleStyle),
                   onTap: () {
                     Navigator.pop(context);
@@ -364,7 +509,11 @@ class _SideMenuWidgetState extends ConsumerState<SideMenuWidget> {
     );
   }
 
-  fetchBlogDetailsBySlug(String s) {}
+  //
+  // fetchBlogDetailsBySlug(String s) {
+  //   // Implement your blog fetching logic here
+  //   return null;
+  // }
 }
 
 const TextStyle _titleStyle = TextStyle(

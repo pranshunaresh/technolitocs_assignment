@@ -2,9 +2,10 @@ import 'package:assihnment_technolitocs/config/model/user_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
-
 import 'package:assihnment_technolitocs/config/model/directory_screen_model.dart';
-import 'directory_member_profile.dart'; // Assuming this is the ProfileCard widget file
+import 'package:marquee/marquee.dart';
+import '../../utils/home/home_all_features_section.dart';
+import 'directory_member_profile.dart';
 
 final chipIndexForDirectoryProvider = StateProvider<int>((ref) => 0);
 
@@ -17,12 +18,22 @@ class Directory extends ConsumerStatefulWidget {
 
 class _DirectoryState extends ConsumerState<Directory> {
   late Future<List<DirectoryProfile2>> members;
+  late TextEditingController _searchController;
+  String _searchQuery = '';
+  int _chipIndex = 0;
+  List<String> filterItems = ["All Members", "Pioneer Members"];
 
   @override
   void initState() {
     super.initState();
+    _searchController = TextEditingController();
     members = fetchMembers();
-    // _chipIndex = ref.watch(chipIndexForDirectoryProvider);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<List<DirectoryProfile2>> fetchMembers() async {
@@ -41,6 +52,7 @@ class _DirectoryState extends ConsumerState<Directory> {
     return SingleChildScrollView(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildSearchBar(),
           const SizedBox(height: 20),
@@ -50,10 +62,17 @@ class _DirectoryState extends ConsumerState<Directory> {
             future: members,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  child: Column(
+                    children: [
+                      buildPlaceholderItem(true),
+                      buildPlaceholderItem(true),
+                      buildPlaceholderItem(true),
+                    ],
+                  ),
+                );
               } else if (snapshot.hasError) {
-                print(snapshot.error);
-                print("///////////////////////////////" + snapshot.toString());
                 return Center(child: Text('Error: ${snapshot.error}'));
               } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                 return const Center(child: Text('No members found.'));
@@ -62,7 +81,6 @@ class _DirectoryState extends ConsumerState<Directory> {
               return _buildMemberCards(context, snapshot.data!);
             },
           ),
-          // SizedBox(height: 100,),
         ],
       ),
     );
@@ -70,7 +88,7 @@ class _DirectoryState extends ConsumerState<Directory> {
 
   Widget _buildSearchBar() {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
         height: 56,
         decoration: BoxDecoration(
@@ -86,6 +104,12 @@ class _DirectoryState extends ConsumerState<Directory> {
         ),
         child: Center(
           child: TextField(
+            controller: _searchController,
+            onChanged: (value) {
+              setState(() {
+                _searchQuery = value.toLowerCase();
+              });
+            },
             decoration: InputDecoration(
               hintText: 'Search by Names, City, or Business Types',
               hintStyle: const TextStyle(fontSize: 14),
@@ -114,39 +138,28 @@ class _DirectoryState extends ConsumerState<Directory> {
   }
 
   Widget _buildFilterButtons() {
-    return
-    // SingleChildScrollView(
-    // scrollDirection: Axis.horizontal,
-    // padding: const EdgeInsets.symmetric(horizontal: 16),
-    // child:
-    //
-    //
-    SizedBox(
+    return SizedBox(
       height: 40,
-      child: ListView.builder(
-        shrinkWrap: true,
-        scrollDirection: Axis.horizontal,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: filterItems.length,
-        itemBuilder: (context, index) {
-          return Center(child: _filterChip(filterItems[index], index));
-        },
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: ListView.builder(
+          shrinkWrap: true,
+          scrollDirection: Axis.horizontal,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: filterItems.length,
+          itemBuilder: (context, index) {
+            return Center(child: _filterChip(filterItems[index], index));
+          },
+        ),
       ),
     );
-    //);
   }
-
-  var _chipIndex = 0;
-  List<String> filterItems = ["All Members", "President", "Pioneer Members"];
 
   Widget _filterChip(String label, int index) {
     return GestureDetector(
       onTap: () {
         setState(() {
-          if (_chipIndex == index)
-            _chipIndex = 0;
-          else
-            _chipIndex = index;
+          _chipIndex = (_chipIndex == index) ? 0 : index;
         });
       },
       child: Padding(
@@ -154,7 +167,7 @@ class _DirectoryState extends ConsumerState<Directory> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: _chipIndex == index ? Color(0x2a000000) : Colors.white,
+            color: _chipIndex == index ? const Color(0x2a000000) : Colors.white,
             borderRadius: BorderRadius.circular(30),
             border: Border.all(color: Colors.grey.shade300),
           ),
@@ -168,111 +181,150 @@ class _DirectoryState extends ConsumerState<Directory> {
     BuildContext context,
     List<DirectoryProfile2> members,
   ) {
-    final filteredMembers =
-        members.where((member) => member.isPioneerMember == true).toList();
+    final pioneerMembers =
+        members.where((m) => m.isPioneerMember == true).toList();
+
+    final searchFiltered =
+        _searchQuery.isEmpty
+            ? members
+            : members
+                .where(
+                  (member) =>
+                      member.name?.toLowerCase().contains(_searchQuery) ??
+                      false,
+                )
+                .toList();
+
+    List<DirectoryProfile2> displayMembers;
+    if (_chipIndex == 1) {
+      displayMembers =
+          _searchQuery.isEmpty
+              ? pioneerMembers
+              : pioneerMembers
+                  .where(
+                    (m) =>
+                        m.name?.toLowerCase().contains(_searchQuery) ?? false,
+                  )
+                  .toList();
+    } else {
+      displayMembers = searchFiltered;
+    }
 
     return Consumer(
       builder: (context, ref, child) {
-        // _chipIndex = ref.watch(chipIndexForDirectoryProvider);
-
         final profile = ref.watch(directoryProfileProvider);
+
+        if (displayMembers.isEmpty) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(20.0),
+              child: Text('No matching members found'),
+            ),
+          );
+        }
+
         return ListView.builder(
           physics: const NeverScrollableScrollPhysics(),
           shrinkWrap: true,
-          itemCount: _chipIndex == 2 ? filteredMembers.length : members.length,
+          itemCount: displayMembers.length,
           itemBuilder: (context, index) {
-            final member =
-                _chipIndex == 2 ? filteredMembers[index] : members[index];
+            final member = displayMembers[index];
             final cityString =
-                member.chapters!.length > 0
+                member.chapters!.isNotEmpty
                     ? ", ${member.chapters![0].name}"
                     : "";
 
-            if (profile!.id == member.id) {
-              return SizedBox.shrink();
-            } else {
-              return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                padding: EdgeInsets.symmetric(vertical: 18, horizontal: 10),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: ListTile(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ProfileCard(member: member),
-                      ),
-                    );
-                    print(member);
-                  },
-                  trailing: ImageIcon(
-                    Image.asset("assets/images/arrow_right_tilted.png").image,
-                    color: Colors.black,
-                  ),
-                  leading: Container(
-                    width: 54,
-                    height: 54,
-                    padding: const EdgeInsets.all(2),
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        colors: [
-                          Color(0xFF30D6EF),
-                          Color(0xFF6A81EB),
-                          Color(0xFF794CEC),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(50),
-                      child: Image.network(
-                        member.profilePicture!.startsWith('http')
-                            ? member.profilePicture!
-                            : 'https://technolitics-s3-bucket.s3.ap-south-1.amazonaws.com/rolbol-s3-bucket/${member.profilePicture}',
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return const Icon(Icons.person, size: 30);
-                        },
-                      ),
-                    ),
-                  ),
+            if (profile?.id == member.id) return const SizedBox.shrink();
 
-                  title: Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          member.name!,
-                          style: const TextStyle(
-                            fontFamily: 'Movatif',
-                            fontSize: 17, // Using Movatif font
+            return Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: ListTile(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ProfileCard(member: member),
+                    ),
+                  );
+                },
+                trailing: ImageIcon(
+                  Image.asset("assets/images/arrow_right_tilted.png").image,
+                  color: Colors.black,
+                ),
+                leading: Container(
+                  width: 54,
+                  height: 54,
+                  padding: const EdgeInsets.all(2),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient:
+                        member.isPioneerMember!
+                            ? const LinearGradient(
+                              colors: [
+                                Color(0xFF30D6EF),
+                                Color(0xFF6A81EB),
+                                Color(0xFF794CEC),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            )
+                            : null,
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(50),
+                    child: Image.network(
+                      member.profilePicture!.startsWith('http')
+                          ? member.profilePicture!
+                          : 'https://technolitics-s3-bucket.s3.ap-south-1.amazonaws.com/rolbol-s3-bucket/${member.profilePicture}',
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          width: 54,
+                          height: 54,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.grey[300],
                           ),
+                          child: const Icon(Icons.person, size: 30),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                title: Row(
+                  children: [
+                    Flexible(
+                      child: Container(
+                        height: 30,
+                        child: AutoScrollText(
+                          text: member.name!,
+                          fontSize: 17,
+                          // hasTag: member.isPioneerMember!,
                         ),
                       ),
-                      const SizedBox(width: 15),
-                      if (member.isPioneerMember!) _pioneerTag(),
-                      // Add special tags for Fanish Jain and Anup Mundhra
-                      // if (member.name.toLowerCase().contains('fanish jain') ||
-                      //     member.name.toLowerCase().contains('anup mundhra'))
-                      //   _specialTag(),
-                    ],
-                  ),
-                  subtitle: Container(
-                    padding: EdgeInsets.only(top: 10),
-                    child: Text(
-                      '${member.rbChapterDesignationArray![0].name ?? ""}${cityString}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 13),
                     ),
+                    if (member.isPioneerMember!)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 8.0),
+                        child: _pioneerTag(),
+                      ),
+                  ],
+                ),
+                subtitle: Container(
+                  child: Text(
+                    '${member.rbChapterDesignationArray![0].name ?? ""}$cityString',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 13),
                   ),
                 ),
-              );
-            }
+              ),
+            );
           },
         );
       },
@@ -297,6 +349,35 @@ class _DirectoryState extends ConsumerState<Directory> {
           fontSize: 10,
           fontWeight: FontWeight.bold,
           color: Colors.white,
+        ),
+      ),
+    );
+  }
+
+  Widget buildPlaceholderItem(bool isShimmer) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: ListTile(
+        leading: Container(
+          width: 54,
+          height: 54,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: Colors.grey[300],
+          ),
+          child: const Icon(Icons.person, size: 30, color: Colors.grey),
+        ),
+        title: Container(height: 20, width: 150, color: Colors.grey[300]),
+        subtitle: Container(
+          height: 15,
+          width: 100,
+          margin: const EdgeInsets.only(top: 8),
+          color: Colors.grey[300],
         ),
       ),
     );

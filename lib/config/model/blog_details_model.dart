@@ -24,6 +24,7 @@ class BlogDetailsModel {
 }
 
 class BlogData {
+  final String seoSlug;
   final String title;
   final String description;
   final String bannerImage;
@@ -33,6 +34,7 @@ class BlogData {
   final List<MoreDescription> moreDescription;
 
   BlogData({
+    required this.seoSlug,
     required this.title,
     required this.description,
     required this.bannerImage,
@@ -44,6 +46,7 @@ class BlogData {
 
   factory BlogData.fromJson(Map<String, dynamic> json) {
     return BlogData(
+      seoSlug: json['seoSlug'] ?? '',
       title: json['title'] ?? '',
       description: json['description'] ?? '',
       bannerImage: json['bannerImage'] ?? '',

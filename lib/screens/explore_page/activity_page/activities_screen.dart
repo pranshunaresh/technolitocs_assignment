@@ -7,7 +7,9 @@ import '../../../config/model/blog_details_model.dart';
 import 'blog_details.dart';
 
 class ActivityScreen extends StatefulWidget {
-  const ActivityScreen({Key? key}) : super(key: key);
+  final String categoryOfEvent;
+  const ActivityScreen({Key? key, required this.categoryOfEvent})
+    : super(key: key);
 
   @override
   State<ActivityScreen> createState() => _ActivityScreenState();
@@ -15,9 +17,12 @@ class ActivityScreen extends StatefulWidget {
 
 class _ActivityScreenState extends State<ActivityScreen> {
   List<NewsBlogEventResponses> _events = [];
+  List<NewsBlogEventResponses> _filteredEvents = [];
+
   bool _loading = true;
   bool _apiWorking = true;
-  late var _controller;
+  late YoutubePlayerController _controller;
+  final TextEditingController _searchController = TextEditingController();
 
   Map<String, List<NewsBlogEventResponses>> _groupEvents(
     List<NewsBlogEventResponses> events,
@@ -45,42 +50,35 @@ class _ActivityScreenState extends State<ActivityScreen> {
         showFullscreenButton: true,
       ),
     );
+
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    String query = _searchController.text.toLowerCase();
+    setState(() {
+      _filteredEvents =
+          _events
+              .where((event) => event.title.toLowerCase().contains(query))
+              .toList();
+    });
   }
 
   String? extractYouTubeVideoId(String url) {
     final uri = Uri.tryParse(url);
     if (uri == null) return null;
-
-    // Handles https://www.youtube.com/watch?v=VIDEOID
     if (uri.queryParameters.containsKey('v')) {
       return uri.queryParameters['v'];
     }
-
-    // Handles youtu.be/VIDEOID or youtube.com/embed/VIDEOID
-    final regExp = RegExp(
-      r"(?:v=|\/)([0-9A-Za-z_-]{11}).*",
-      caseSensitive: false,
-      multiLine: false,
-    );
-
+    final regExp = RegExp(r"(?:v=|\/)([0-9A-Za-z_-]{11}).*");
     final match = regExp.firstMatch(url);
     return match?.group(1);
-  }
-
-  Widget videoPlayer(String uri) {
-    final id = extractYouTubeVideoId(uri);
-
-    final _controller = YoutubePlayerController.fromVideoId(
-      videoId: id!,
-      autoPlay: false,
-      params: const YoutubePlayerParams(showFullscreenButton: true),
-    );
-
-    return SizedBox(
-      height: 64,
-      width: 64,
-      child: YoutubePlayer(controller: _controller, aspectRatio: 1),
-    );
   }
 
   String removeAllHtmlTags(String htmlText) {
@@ -92,8 +90,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
   }
 
   Future<void> _fetchEventData() async {
-    const String apiUrl =
-        'https://api.rolbol.org/api/v1/notification/byNotificationType/EVENTS';
+    String apiUrl =
+        'https://api.rolbol.org/api/v1/notification/byNotificationType/${widget.categoryOfEvent}';
 
     try {
       final response = await http.get(Uri.parse(apiUrl));
@@ -101,6 +99,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
         final model = newsBlogEventModelFromJson(response.body);
         setState(() {
           _events = model.data;
+          _filteredEvents = model.data;
           _loading = false;
           _apiWorking = true;
         });
@@ -118,7 +117,25 @@ class _ActivityScreenState extends State<ActivityScreen> {
     }
   }
 
-  // Define text styles
+  Widget _buildPlaceholder() {
+    return Container(
+      // margin: const EdgeInsets.symmetric(horizontal: 15.0),
+      child: Column(
+        children: [
+          Container(
+            // margin: const EdgeInsets.only(top: 25, bottom: 15),
+            // padding: EdgeInsets.symmetric(horizontal: 20),
+            child: Container(width: 100, height: 12, color: Colors.grey[300]),
+          ),
+          buildPlaceholderItem(false),
+          buildPlaceholderItem(false),
+          buildPlaceholderItem(false),
+          buildPlaceholderItem(false),
+        ],
+      ),
+    );
+  }
+
   final TextStyle _searchHintStyle = const TextStyle(
     fontFamily: 'Movatif',
     color: Colors.black,
@@ -133,7 +150,6 @@ class _ActivityScreenState extends State<ActivityScreen> {
   );
 
   final TextStyle _dateTextStyle = TextStyle(
-    // No fontFamily specified - will use default
     color: Color.fromRGBO(0, 0, 0, 70),
     fontSize: 15,
     fontWeight: FontWeight.w400,
@@ -144,7 +160,6 @@ class _ActivityScreenState extends State<ActivityScreen> {
     fontSize: 20,
     fontWeight: FontWeight.w600,
     color: Colors.black,
-    // height: 1.3,
   );
 
   final TextStyle _noEventsTextStyle = const TextStyle(
@@ -154,15 +169,16 @@ class _ActivityScreenState extends State<ActivityScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Map<String, List<NewsBlogEventResponses>> _groupedEvents = _groupEvents(
-      _events,
+    Map<String, List<NewsBlogEventResponses>> groupedEvents = _groupEvents(
+      _filteredEvents,
     );
     final sortedDates =
-        _groupedEvents.keys.toList()..sort(
+        groupedEvents.keys.toList()..sort(
           (a, b) => DateFormat(
             'dd MMMM yyyy',
           ).parse(b).compareTo(DateFormat('dd MMMM yyyy').parse(a)),
         );
+
     return SafeArea(
       child: SingleChildScrollView(
         child: Padding(
@@ -171,10 +187,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
             children: [
               // Search Bar
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 0,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(70),
@@ -192,6 +205,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: TextField(
+                        controller: _searchController,
                         decoration: InputDecoration(
                           hintText: 'Search by Event, Projects, Initiatives...',
                           hintStyle: _searchHintStyle,
@@ -214,19 +228,21 @@ class _ActivityScreenState extends State<ActivityScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Loading / Error / Event List
               if (_loading)
-                const Center(child: CircularProgressIndicator())
-              else if (_events.isEmpty)
+                Container(
+                  // margin: EdgeInsets.symmetric(horizontal: 20),
+                  child: _buildPlaceholder(),
+                )
+              else if (_filteredEvents.isEmpty)
                 Text('No events found', style: _noEventsTextStyle)
               else
                 ListView.builder(
                   shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
+                  physics: const NeverScrollableScrollPhysics(),
                   itemCount: sortedDates.length,
                   itemBuilder: (context, index) {
                     final date = sortedDates[index];
-                    final events = _groupedEvents[date];
+                    final events = groupedEvents[date];
 
                     return Column(
                       children: [
@@ -243,9 +259,11 @@ class _ActivityScreenState extends State<ActivityScreen> {
                         ...?events?.map((event) {
                           final imageUrl =
                               'https://technolitics-s3-bucket.s3.ap-south-1.amazonaws.com/rolbol-s3-bucket/${event.bannerImage}';
+
                           return GestureDetector(
                             onTap: () {
                               final blogData = BlogData(
+                                seoSlug: event.seoSlug,
                                 bannerVideo: event.bannerVideo,
                                 bannerType: event.bannerType,
                                 title: event.title,
@@ -265,22 +283,23 @@ class _ActivityScreenState extends State<ActivityScreen> {
                               );
                             },
                             child: Container(
-                              // margin: EdgeInsets.only(bottom: 20),
-                              padding: EdgeInsets.only(top: 20, bottom: 16),
+                              padding: const EdgeInsets.only(
+                                top: 20,
+                                bottom: 16,
+                              ),
                               height: 135,
-                              decoration: BoxDecoration(
+                              decoration: const BoxDecoration(
                                 border: BorderDirectional(
                                   bottom: BorderSide(color: Color(0x1a000000)),
                                 ),
                               ),
-
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   ClipRRect(
                                     borderRadius: BorderRadius.circular(18),
                                     child:
-                                        event.bannerImage == ""
+                                        event.bannerImage.isEmpty
                                             ? Image.network(
                                               'https://img.youtube.com/vi/${extractYouTubeVideoId(event.bannerVideo)}/hqdefault.jpg',
                                               width: 104,
@@ -297,9 +316,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                                     ),
                                                   ),
                                             )
-                                            :
-                                            // Text(imageUrl)
-                                            Image.network(
+                                            : Image.network(
                                               imageUrl,
                                               width: 104,
                                               height: 104,
@@ -315,10 +332,9 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                                     ),
                                                   ),
                                             ),
-                                    // videoPlayer(event.bannerVideo)
                                   ),
                                   const SizedBox(width: 16),
-                                  Flexible(
+                                  Expanded(
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
@@ -335,8 +351,8 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                     ),
                                   ),
                                   const SizedBox(width: 8),
-                                  Center(
-                                    child: const Icon(
+                                  const Center(
+                                    child: Icon(
                                       Icons.chevron_right,
                                       size: 24,
                                       color: Colors.black,
@@ -351,116 +367,61 @@ class _ActivityScreenState extends State<ActivityScreen> {
                     );
                   },
                 ),
-
-              // ListView.builder(
-              //   shrinkWrap: true,
-              //   physics: const NeverScrollableScrollPhysics(),
-              //   itemCount: _events.length,
-              //
-              //   itemBuilder: (context, index) {
-              //     final event = _events[index];
-              //     final dateStr = DateFormat(
-              //       'd MMM yyyy',
-              //     ).format(event.postDate);
-              //
-              //     final imageUrl =
-              //         'https://technolitics-s3-bucket.s3.ap-south-1.amazonaws.com/rolbol-s3-bucket/${event.bannerImage}';
-              //
-              //     return GestureDetector(
-              //       onTap: () {
-              //         final blogData = BlogData(
-              //           bannerVideo: event.bannerVideo,
-              //           bannerType:event.bannerType,
-              //           title: event.title,
-              //           bannerImage: imageUrl,
-              //           postDate: dateStr,
-              //           description: removeAllHtmlTags(event.description),
-              //           moreDescription: event.moreDescriptions,
-              //         );
-              //         Navigator.push(
-              //           context,
-              //           MaterialPageRoute(
-              //             builder: (_) => BlogDetails(blogData: blogData),
-              //           ),
-              //         );
-              //       },
-              //       child: Container(
-              //         // margin: EdgeInsets.only(bottom: 20),
-              //         padding: EdgeInsets.only(top: 20,bottom: 16),
-              //         height: 136,
-              //         decoration: BoxDecoration(
-              //             border: index==0?null:BoxBorder.fromLTRB(top: BorderSide(color: Color(0x1a000000)))
-              //         ),
-              //         child: Row(
-              //           crossAxisAlignment: CrossAxisAlignment.start,
-              //           children: [
-              //             ClipRRect(
-              //               borderRadius: BorderRadius.circular(18),
-              //               child: event.bannerImage==""?Image.network(
-              //                 'https://img.youtube.com/vi/${extractYouTubeVideoId(event.bannerVideo)}/hqdefault.jpg'                                ,
-              //                 width: 104,
-              //                 height: 104,
-              //                 fit: BoxFit.cover,
-              //                 errorBuilder:
-              //                     (_, __, ___) => Container(
-              //
-              //                   width: 104,
-              //                   height: 104,
-              //                   color: Colors.grey[300],
-              //                   child: const Icon(
-              //                     Icons.broken_image,
-              //                     size: 24,
-              //                   ),
-              //                 ),
-              //               ):
-              //               // Text(imageUrl)
-              //               Image.network(
-              //                 imageUrl,
-              //                 width: 104,
-              //                 height: 104,
-              //                 fit: BoxFit.cover,
-              //                 errorBuilder:
-              //                     (_, __, ___) => Container(
-              //                   width: 104,
-              //                   height:104,
-              //                   color: Colors.grey[300],
-              //                   child: const Icon(
-              //                     Icons.broken_image,
-              //                     size: 24,
-              //                   ),
-              //                 ),
-              //               )
-              //               // videoPlayer(event.bannerVideo)
-              //               ,
-              //             ),
-              //             const SizedBox(width: 16),
-              //             Expanded(
-              //               child: Column(
-              //                 crossAxisAlignment: CrossAxisAlignment.start,
-              //                 // mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              //                 children: [
-              //                   Text(dateStr, style: _dateTextStyle),
-              //                   const SizedBox(height: 9),
-              //                   Text(event.title.length>100?event.title.substring(0,75)+"...":event.title, style: _eventTitleStyle),
-              //                 ],
-              //               ),
-              //             ),
-              //             const SizedBox(width: 8),
-              //             const Icon(
-              //               Icons.chevron_right,
-              //               size: 24,
-              //               color: Colors.black,
-              //             ),
-              //           ],
-              //         ),
-              //       ),
-              //     );
-              //   },
-              // ),
             ],
           ),
         ),
       ),
     );
   }
+}
+
+Widget buildPlaceholderItem(bool isDirectory) {
+  return Container(
+    // margin: EdgeInsets.symmetric(horizontal: 20),
+    padding: const EdgeInsets.only(top: 20, bottom: 16),
+    height: isDirectory ? 100 : 135,
+    decoration: const BoxDecoration(
+      border: BorderDirectional(bottom: BorderSide(color: Color(0x1a000000))),
+    ),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 104,
+          height: 104,
+          decoration: BoxDecoration(
+            // shape: BoxShape.circle,
+            color: Colors.grey[300],
+            borderRadius: BorderRadius.circular(18),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(width: 100, height: 12, color: Colors.grey[300]),
+              const SizedBox(height: 9),
+              Container(
+                width: double.infinity,
+                height: 20,
+                color: Colors.grey[300],
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+        const SizedBox(width: 8),
+        Center(
+          child:
+              isDirectory
+                  ? ImageIcon(
+                    Image.asset("assets/images/arrow_right_tilted.png").image,
+                    color: Colors.grey,
+                  )
+                  : Icon(Icons.chevron_right, size: 24, color: Colors.grey),
+        ),
+      ],
+    ),
+  );
 }

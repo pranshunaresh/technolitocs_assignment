@@ -1,5 +1,10 @@
 import 'dart:convert';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter_phoenix/flutter_phoenix.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../screens/home_screen.dart';
 
 class AuthService {
   static const String _accessTokenKey = 'access_token';
@@ -34,12 +39,19 @@ class AuthService {
     return prefs.getBool(_isLoggedInKey) ?? false;
   }
 
-  static Future<void> logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_accessTokenKey);
-    await prefs.remove(_mobileNumberKey);
-    await prefs.remove(_profileDataKey);
-    await prefs.setBool(_isLoggedInKey, false);
+  static Future<void> logout(BuildContext context) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_accessTokenKey);
+      await prefs.remove(_mobileNumberKey);
+      await prefs.remove(_profileDataKey);
+      await prefs.setBool(_isLoggedInKey, false);
+
+      print("logged out from async sharedpref////////");
+      Phoenix.rebirth(context);
+    } catch (e) {
+      print(e);
+    }
   }
 
   /// Save profile JSON string locally

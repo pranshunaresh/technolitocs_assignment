@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class AllGroups extends StatelessWidget {
   const AllGroups({Key? key}) : super(key: key);
@@ -76,7 +77,7 @@ class AllGroups extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       margin: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -91,12 +92,13 @@ class AllGroups extends StatelessWidget {
                   style: const TextStyle(
                     fontFamily: 'Movatif',
                     fontWeight: FontWeight.w400,
-                    fontSize: 18,
+                    fontSize: 20,
                     color: Colors.black,
                   ),
                 ),
               ),
               Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Image.asset(
                     'assets/images/arrow_right_tilted.png',
@@ -109,7 +111,7 @@ class AllGroups extends StatelessWidget {
                     style: TextStyle(
                       fontFamily: 'Movatif',
                       fontWeight: FontWeight.w400,
-                      fontSize: 12,
+                      fontSize: 14,
                       color: Colors.black,
                     ),
                   ),
@@ -117,13 +119,20 @@ class AllGroups extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            description,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Color(0xFF4B4B4B),
-              height: 1.3,
+          const SizedBox(height: 20),
+          Container(
+            width: double.infinity,
+            padding: EdgeInsets.only(top: 12),
+            decoration: BoxDecoration(
+              border: Border(top: BorderSide(color: Color(0xffe8e8e8))),
+            ),
+            child: Text(
+              description,
+              style: const TextStyle(
+                fontSize: 15,
+                color: Color(0xFF4B4B4B),
+                height: 1.3,
+              ),
             ),
           ),
         ],
@@ -136,6 +145,12 @@ class AllGroups extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.grey[200],
       appBar: AppBar(
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarColor: Colors.white, // White background
+          statusBarIconBrightness: Brightness.dark, // Black icons/text
+          statusBarBrightness: Brightness.light, // For iOS
+        ),
+
         title: const Text(
           'Groups',
           style: TextStyle(

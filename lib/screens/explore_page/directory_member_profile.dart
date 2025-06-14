@@ -99,7 +99,9 @@ class ProfileCard extends StatelessWidget {
           final profile = ref.watch(directoryProfileProvider);
 
           bool sameChapter =
-              profile!.membershipChapter == member.membershipChapter;
+              profile != null
+                  ? profile.membershipChapter == member.membershipChapter
+                  : false;
           return SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
@@ -147,6 +149,19 @@ class ProfileCard extends StatelessWidget {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(color: Colors.grey.shade300),
+                            gradient:
+                                member.isPioneerMember!
+                                    ? LinearGradient(
+                                      colors: [
+                                        Color(0xFF30D6EF),
+                                        Color(0xFF6A81EB),
+                                        Color(0xFF794CEC),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    )
+                                    : null,
+
                             color: Colors.white,
                           ),
                           child: ClipOval(

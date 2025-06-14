@@ -1,9 +1,14 @@
 import 'dart:convert';
+import 'package:assihnment_technolitocs/config/model/user_model.dart';
+import 'package:assihnment_technolitocs/screens/home_screen.dart';
+import 'package:flutter_phoenix/flutter_phoenix.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:restart_app/restart_app.dart';
 
 class ProfileEditModel {
   final bool status;
@@ -76,14 +81,14 @@ class Data {
   );
 }
 
-class EditProfilePage extends StatefulWidget {
+class EditProfilePage extends ConsumerStatefulWidget {
   const EditProfilePage({super.key});
 
   @override
-  State<EditProfilePage> createState() => _EditProfilePageState();
+  ConsumerState<EditProfilePage> createState() => _EditProfilePageState();
 }
 
-class _EditProfilePageState extends State<EditProfilePage> {
+class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   ProfileEditModel? profileData;
   bool isLoading = false;
 
@@ -114,9 +119,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   final String apiUrl = 'https://api.rolbol.org/api/v1/adminuser/memberDetails';
 
-  final String bearerToken =
-      'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MmVmNmIyMWU4MWQyZjc2ZmI0Zjk5ZiIsImlhdCI6MTc0NzkwODM0MCwiZXhwIjoxNzc5NDQ0MzQwfQ.D0nGC0WB44d742SM23pwLN6rQ8u6alYofxcJst3uQPc';
+  // final String bearerToken =
+  //     'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4MmVmNmIyMWU4MWQyZjc2ZmI0Zjk5ZiIsImlhdCI6MTc0NzkwODM0MCwiZXhwIjoxNzc5NDQ0MzQwfQ.D0nGC0WB44d742SM23pwLN6rQ8u6alYofxcJst3uQPc';
 
+  late String bt3;
   @override
   void initState() {
     super.initState();
@@ -140,7 +146,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ),
       );
 
-      request.headers['Authorization'] = bearerToken;
+      request.headers['Authorization'] = "Bearer $bt3";
       request.files.add(
         await http.MultipartFile.fromPath(
           'profilePicture',
@@ -150,13 +156,29 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
       final response = await request.send();
       final responseData = await response.stream.bytesToString();
+      print(responseData + "response data /////////////");
       final jsonResponse = json.decode(responseData);
+      // ref.read(directoryProfileProvider.notifier);
 
       if (response.statusCode == 200 && jsonResponse['status'] == true) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Profile picture updated successfully')),
         );
         // Refresh profile data to show new image
+
+        final profile = ref.read(directoryProfileProvider);
+        profile!.copyWith(profilePicture: jsonResponse["data"]);
+
+        ref.read(directoryProfileProvider.notifier).updateProfile(profile);
+
+        print(
+          "${profile.profilePicture}   /////////////////////////////profile var ki pfp",
+        );
+
+        print(
+          "${ref.read(directoryProfileProvider)!.profilePicture}  ////////////////////////////////provider ki pfp",
+        );
+
         await fetchProfileData();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -193,6 +215,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   Future<void> fetchProfileData() async {
+    bt3 = await fetchTokenFromStorage();
     setState(() {
       isLoading = true;
     });
@@ -200,15 +223,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
     try {
       final response = await http.get(
         Uri.parse(apiUrl),
-        headers: {'Authorization': bearerToken},
+        headers: {'Authorization': "Bearer $bt3"},
       );
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> jsonResponse = json.decode(response.body);
         profileData = ProfileEditModel.fromJson(jsonResponse);
-
-        // Populate controllers with API data
         final data = profileData!.data;
+
         bioController.text = data.aboutMember;
         fullNameController.text = data.name;
         dobController.text = _formatDate(data.dateOfBirth);
@@ -307,7 +329,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       final response = await http.put(
         Uri.parse('https://api.rolbol.org/api/v1/adminuser/updateMember'),
         headers: {
-          'Authorization': bearerToken,
+          'Authorization': "Bearer $bt3",
           'Content-Type': 'application/json',
         },
         body: jsonEncode(updatedData),
@@ -316,6 +338,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
       if (response.statusCode == 200) {
         final responseJson = json.decode(response.body);
         if (responseJson['status'] == true) {
+          print(responseJson);
+          final profile = ref.read(directoryProfileProvider);
+          // profile!.copyWith(profilePicture: ["data"]);
+
+          // ref.read(directoryProfileProvider.notifier).updateProfile(profile);
+
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Profile updated successfully')),
           );
@@ -381,456 +409,476 @@ class _EditProfilePageState extends State<EditProfilePage> {
     return months[month] ?? 1;
   }
 
+  void onTabSelected(int index) {
+    final selectedTabIndex = ref.watch(selectedTabProvider);
+    if (selectedTabIndex == index) return;
+
+    previousTabIndex = selectedTabIndex;
+    ref.read(selectedTabProvider.notifier).state = index;
+    showAppBar = index != 3;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
+    return PopScope(
+      onPopInvokedWithResult: (_, _) {
+        Phoenix.rebirth(context);
+        onTabSelected(0);
+      },
+      child: Scaffold(
         backgroundColor: Colors.white,
-        elevation: 1,
-        centerTitle: true,
-        title: const Text(
-          'Edit Profile',
-          style: TextStyle(
-            color: Colors.black87,
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 1,
+          centerTitle: true,
+          title: const Text(
+            'Edit Profile',
+            style: TextStyle(
+              color: Colors.black87,
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+            ),
+          ),
+          leading: IconButton(
+            icon: Image.asset(
+              'assets/images/backward_arrow_black.png',
+              width: 20,
+              height: 20,
+              color: Colors.black87,
+            ),
+            onPressed: () {
+              // setState(() {});
+              // Restart.restartApp(notificationTitle: "Restarting Please Wait");
+              // ref.refresh(directoryProfileProvider);
+              // print('/////////////////////${MediaQuery.of(context).size.height}height///////////////${MediaQuery.of(context).size.width}');
+              Navigator.pop(context);
+              Phoenix.rebirth(context);
+            },
           ),
         ),
-        leading: IconButton(
-          icon: Image.asset(
-            'assets/images/backward_arrow_black.png',
-            width: 20,
-            height: 20,
-            color: Colors.black87,
-          ),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-      ),
-      body:
-          isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 24,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Center(
-                      child: CircleAvatar(
-                        radius: 60,
-                        backgroundColor: Colors.grey[200],
-                        child:
-                            isLoading && _selectedImage != null
-                                ? const CircularProgressIndicator()
-                                : null,
-                        backgroundImage:
-                            isLoading && _selectedImage != null
-                                ? null
-                                : _selectedImage != null
-                                ? FileImage(_selectedImage!)
-                                : (profileData != null &&
-                                        profileData!
-                                            .data
-                                            .profilePicture
-                                            .isNotEmpty
-                                    ? NetworkImage(
-                                      'https://technolitics-s3-bucket.s3.ap-south-1.amazonaws.com/rolbol-s3-bucket/${profileData!.data.profilePicture}',
-                                    )
-                                    : const AssetImage(
-                                          'assets/images/profile_placeholder.png',
-                                        )
-                                        as ImageProvider),
+        body:
+            isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 24,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: CircleAvatar(
+                          radius: 60,
+                          backgroundColor: Colors.grey[200],
+                          child:
+                              isLoading && _selectedImage != null
+                                  ? const CircularProgressIndicator()
+                                  : null,
+                          backgroundImage:
+                              isLoading && _selectedImage != null
+                                  ? null
+                                  : _selectedImage != null
+                                  ? FileImage(_selectedImage!)
+                                  : (profileData != null &&
+                                          profileData!
+                                              .data
+                                              .profilePicture
+                                              .isNotEmpty
+                                      ? NetworkImage(
+                                        'https://technolitics-s3-bucket.s3.ap-south-1.amazonaws.com/rolbol-s3-bucket/${profileData!.data.profilePicture}',
+                                      )
+                                      : const AssetImage(
+                                            'assets/images/profile_placeholder.png',
+                                          )
+                                          as ImageProvider),
+                        ),
                       ),
-                    ),
 
-                    const SizedBox(height: 16),
+                      const SizedBox(height: 16),
 
-                    Center(
-                      child: TextButton(
-                        onPressed: _pickImage,
-                        child: const Text(
-                          'Change profile image',
-                          style: TextStyle(
-                            color: Color(0xff000000),
-                            fontWeight: FontWeight.w600,
+                      Center(
+                        child: TextButton(
+                          onPressed: _pickImage,
+                          child: const Text(
+                            'Change profile image',
+                            style: TextStyle(
+                              color: Color(0xff000000),
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ),
-                    ),
 
-                    const SizedBox(height: 16),
+                      const SizedBox(height: 16),
 
-                    const SizedBox(height: 24),
+                      const SizedBox(height: 24),
 
-                    // Full Name
-                    const Text(
-                      'Full Name',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                        color: Color(0xff7d7d7d),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    TextField(
-                      controller: fullNameController,
-                      decoration: InputDecoration(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
+                      // Full Name
+                      const Text(
+                        'Full Name',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: Color(0xff7d7d7d),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Date of Birth
-                    const Text(
-                      'Date of Birth',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                        color: Color(0xff7d7d7d),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    TextField(
-                      controller: dobController,
-                      readOnly: true,
-                      decoration: InputDecoration(
-                        suffixIcon: const Icon(Icons.calendar_today),
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                      ),
-                      onTap: () async {
-                        DateTime initialDate = DateTime.now();
-                        try {
-                          initialDate = DateTime.parse(dobController.text);
-                        } catch (_) {}
-
-                        final date = await showDatePicker(
-                          context: context,
-                          initialDate: initialDate,
-                          firstDate: DateTime(1900),
-                          lastDate: DateTime.now(),
-                        );
-
-                        if (date != null) {
-                          dobController.text = _formatDate(date);
-                        }
-                      },
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Blood Group (Dropdown)
-                    const Text(
-                      'Blood Group',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                        color: Color(0xff7d7d7d),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    DropdownButtonFormField<String>(
-                      value:
-                          bloodGroupController.text.isNotEmpty
-                              ? bloodGroupController.text
-                              : null,
-                      decoration: InputDecoration(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                      ),
-                      items:
-                          bloodGroups.map((String value) {
-                            return DropdownMenuItem<String>(
-                              value: value,
-                              child: Text(value),
-                            );
-                          }).toList(),
-                      onChanged: (newValue) {
-                        setState(() {
-                          bloodGroupController.text = newValue!;
-                        });
-                      },
-                      hint: const Text('Select Blood Group'),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // About Member (Bio)
-                    const Text(
-                      'About Member',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                        color: Color(0xff7d7d7d),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    TextField(
-                      controller: bioController,
-                      maxLines: 3,
-                      decoration: InputDecoration(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // RB Chapter Designation Name (read-only)
-                    const Text(
-                      'RB Chapter Designation Name',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                        color: Color(0xff7d7d7d),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    TextField(
-                      controller: rolbolController,
-                      readOnly: true,
-                      decoration: InputDecoration(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey[100],
-                        hintText: "(Not editable)",
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Profession
-                    const Text(
-                      'Profession',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                        color: Color(0xff7d7d7d),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    TextField(
-                      controller: jobProfileController,
-                      decoration: InputDecoration(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Name of Business
-                    const Text(
-                      'Name of Business',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                        color: Color(0xff7d7d7d),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    TextField(
-                      controller: businessNameController,
-                      decoration: InputDecoration(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // RPP Designation Name (read-only)
-                    const Text(
-                      'RPP Designation Name',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                        color: Color(0xff7d7d7d),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    TextField(
-                      controller: designationController,
-                      readOnly: true,
-                      decoration: InputDecoration(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        filled: true,
-                        fillColor: Colors.grey[100],
-                        hintText: "(Not editable)",
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Primary Contact Number
-                    const Text(
-                      'Primary Contact Number',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                        color: Color(0xff7d7d7d),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    TextField(
-                      controller: contactNumberController,
-                      keyboardType: TextInputType.phone,
-                      decoration: InputDecoration(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // WhatsApp Contact Number
-                    const Text(
-                      'WhatsApp Contact Number',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                        color: Color(0xff7d7d7d),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    TextField(
-                      controller: whatsappNumberController,
-                      keyboardType: TextInputType.phone,
-                      decoration: InputDecoration(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Email ID
-                    const Text(
-                      'Email ID',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                        color: Color(0xff7d7d7d),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    TextField(
-                      controller: emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: InputDecoration(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Formal Address
-                    const Text(
-                      'Formal Address',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                        color: Color(0xff7d7d7d),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    TextField(
-                      controller: formalAddressController,
-                      maxLines: 2,
-                      decoration: InputDecoration(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 30),
-
-                    // Save Changes button
-                    Center(
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 36,
-                            vertical: 16,
+                      const SizedBox(height: 4),
+                      TextField(
+                        controller: fullNameController,
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
                           ),
-                          backgroundColor: const Color(0xff000000),
-                          shape: RoundedRectangleBorder(
+                          border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(6),
                           ),
                         ),
-                        onPressed: _saveChanges,
-                        child: const Text(
-                          'Save Changes',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 14,
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Date of Birth
+                      const Text(
+                        'Date of Birth',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: Color(0xff7d7d7d),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      TextField(
+                        controller: dobController,
+                        readOnly: true,
+                        decoration: InputDecoration(
+                          suffixIcon: const Icon(Icons.calendar_today),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                        onTap: () async {
+                          DateTime initialDate = DateTime.now();
+                          try {
+                            initialDate = DateTime.parse(dobController.text);
+                          } catch (_) {}
+
+                          final date = await showDatePicker(
+                            context: context,
+                            initialDate: initialDate,
+                            firstDate: DateTime(1900),
+                            lastDate: DateTime.now(),
+                          );
+
+                          if (date != null) {
+                            dobController.text = _formatDate(date);
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Blood Group (Dropdown)
+                      const Text(
+                        'Blood Group',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: Color(0xff7d7d7d),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      DropdownButtonFormField<String>(
+                        value:
+                            bloodGroupController.text.isNotEmpty
+                                ? bloodGroupController.text
+                                : null,
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                        items:
+                            bloodGroups.map((String value) {
+                              return DropdownMenuItem<String>(
+                                value: value,
+                                child: Text(value),
+                              );
+                            }).toList(),
+                        onChanged: (newValue) {
+                          setState(() {
+                            bloodGroupController.text = newValue!;
+                          });
+                        },
+                        hint: const Text('Select Blood Group'),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // About Member (Bio)
+                      const Text(
+                        'About Member',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: Color(0xff7d7d7d),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      TextField(
+                        controller: bioController,
+                        maxLines: 3,
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 16),
+
+                      // RB Chapter Designation Name (read-only)
+                      const Text(
+                        'RB Chapter Designation Name',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: Color(0xff7d7d7d),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      TextField(
+                        controller: rolbolController,
+                        readOnly: true,
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey[100],
+                          hintText: "(Not editable)",
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Profession
+                      const Text(
+                        'Profession',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: Color(0xff7d7d7d),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      TextField(
+                        controller: jobProfileController,
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Name of Business
+                      const Text(
+                        'Name of Business',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: Color(0xff7d7d7d),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      TextField(
+                        controller: businessNameController,
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // RPP Designation Name (read-only)
+                      const Text(
+                        'RPP Designation Name',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: Color(0xff7d7d7d),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      TextField(
+                        controller: designationController,
+                        readOnly: true,
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          filled: true,
+                          fillColor: Colors.grey[100],
+                          hintText: "(Not editable)",
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Primary Contact Number
+                      const Text(
+                        'Primary Contact Number',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: Color(0xff7d7d7d),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      TextField(
+                        controller: contactNumberController,
+                        keyboardType: TextInputType.phone,
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // WhatsApp Contact Number
+                      const Text(
+                        'WhatsApp Contact Number',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: Color(0xff7d7d7d),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      TextField(
+                        controller: whatsappNumberController,
+                        keyboardType: TextInputType.phone,
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Email ID
+                      const Text(
+                        'Email ID',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: Color(0xff7d7d7d),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      TextField(
+                        controller: emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Formal Address
+                      const Text(
+                        'Formal Address',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: Color(0xff7d7d7d),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      TextField(
+                        controller: formalAddressController,
+                        maxLines: 2,
+                        decoration: InputDecoration(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 30),
+
+                      // Save Changes button
+                      Center(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 36,
+                              vertical: 16,
+                            ),
+                            backgroundColor: const Color(0xff000000),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                          ),
+                          onPressed: _saveChanges,
+                          child: const Text(
+                            'Save Changes',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+      ),
     );
   }
 }

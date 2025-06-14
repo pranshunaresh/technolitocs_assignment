@@ -71,6 +71,14 @@ class ExploreSection extends StatelessWidget {
                     'url': 'https://randomuser.me/api/portraits/men/32.jpg',
                     'semanticLabel': 'Portrait of random user',
                   },
+                  {
+                    'url': 'https://randomuser.me/api/portraits/men/32.jpg',
+                    'semanticLabel': 'Portrait of random user',
+                  },
+                  {
+                    'url': 'https://randomuser.me/api/portraits/men/32.jpg',
+                    'semanticLabel': 'Portrait of random user',
+                  },
                 ],
               ),
 

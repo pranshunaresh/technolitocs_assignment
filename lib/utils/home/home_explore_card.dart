@@ -62,7 +62,7 @@ class ExploreCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  height: 30,
+                  // width: 70,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 10,
                     vertical: 2,
@@ -71,13 +71,19 @@ class ExploreCard extends StatelessWidget {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(50),
                   ),
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.black,
-                      fontFamily: 'Movatif',
+                  child: SizedBox(
+                    height: 30,
+                    width: 70,
+                    child: Center(
+                      child: Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.black,
+                          fontFamily: 'Movatif',
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -99,15 +105,25 @@ class ExploreCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     // Using Wrap widget to handle overflow in profile images
-                    Wrap(
-                      spacing: 8, // Space between the profile images
-                      children:
-                          profileImages.map((profile) {
-                            return _buildProfileImage(
+                    SizedBox(
+                      height: 45,
+                      width:
+                          (profileImages.length - 1) * 35 +
+                          45, // dynamic width: (offset * (n - 1)) + image width
+                      child: Stack(
+                        clipBehavior:
+                            Clip.none, // allow overlap beyond bounds if needed
+                        children: List.generate(profileImages.length, (index) {
+                          final profile = profileImages[index];
+                          return Positioned(
+                            left: index * 35, // overlap amount
+                            child: _buildProfileImage(
                               profile['url']!,
                               profile['semanticLabel']!,
-                            );
-                          }).toList(),
+                            ),
+                          );
+                        }),
+                      ),
                     ),
                     Align(
                       alignment: Alignment.centerLeft,
@@ -153,7 +169,7 @@ class ExploreCard extends StatelessWidget {
 
   static Widget _buildProfileImage(String url, String semanticLabel) {
     return Container(
-      margin: const EdgeInsets.only(right: 8),
+      // margin: const EdgeInsets.only(right: 8),
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(color: Colors.white, width: 2),

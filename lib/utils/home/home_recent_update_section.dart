@@ -118,11 +118,8 @@ class _RecentUpdatesSectionState extends State<RecentUpdatesSection> {
                     },
                     child: _NavTabContainer(
                       text: recentUpdateButtons[index]
-                          .replaceAll(
-                            '_',
-                            ' ',
-                          ) // Replace underscores with spaces
-                          .split(' ') // Split into words
+                          .replaceAll('_', ' ')
+                          .split(' ')
                           .map(
                             (word) =>
                                 word.isNotEmpty
@@ -144,7 +141,45 @@ class _RecentUpdatesSectionState extends State<RecentUpdatesSection> {
             future: getRecentUpdates(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(child: CircularProgressIndicator());
+                return Column(
+                  children: [
+                    UpdateCardWidget(
+                      title: "",
+                      tagText: "",
+                      date: DateTime.now().toIso8601String(),
+                      imagePath: "",
+                      bottomText: "",
+                    ),
+                    UpdateCardWidget(
+                      title: "",
+                      tagText: "",
+                      date: DateTime.now().toIso8601String(),
+                      imagePath: "",
+                      bottomText: "",
+                    ),
+                    UpdateCardWidget(
+                      title: "",
+                      tagText: "",
+                      date: DateTime.now().toIso8601String(),
+                      imagePath: "",
+                      bottomText: "",
+                    ),
+                    UpdateCardWidget(
+                      title: "",
+                      tagText: "",
+                      date: DateTime.now().toIso8601String(),
+                      imagePath: "",
+                      bottomText: "",
+                    ),
+                    UpdateCardWidget(
+                      title: "",
+                      tagText: "",
+                      date: DateTime.now().toIso8601String(),
+                      imagePath: "",
+                      bottomText: "",
+                    ),
+                  ],
+                );
               } else if (!snapshot.hasData) {
                 return Text("Error!!");
               } else {
@@ -166,15 +201,13 @@ class _RecentUpdatesSectionState extends State<RecentUpdatesSection> {
                     if (recentUpdateButtonIndex == 0 ||
                         recentUpdateButtons[recentUpdateButtonIndex] ==
                             data1["postCategory"]) {
-                      // print(data1);
                       return GestureDetector(
-                        // onTap: ,
                         onTap: () {
-                          // print(data1);
                           final imageUrl =
                               'https://technolitics-s3-bucket.s3.ap-south-1.amazonaws.com/rolbol-s3-bucket/${data1['bannerImage']}';
 
                           final blogData = BlogData(
+                            seoSlug: data1['seoSlug'],
                             description: removeAllHtmlTags(
                               data1["description"],
                             ),
@@ -291,10 +324,11 @@ class _NavTabContainer extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 16,
-          fontWeight: FontWeight.w500,
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
           color: Colors.black,
+          // fontFamily: "NotoSans"
         ),
       ),
     );
