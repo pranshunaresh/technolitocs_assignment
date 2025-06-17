@@ -10,6 +10,9 @@ import 'package:assihnment_technolitocs/screens/profile_edit.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../config/auth_service.dart' show AuthService;
+
+import 'contact_us.dart';
+import 'help_and_support.dart';
 import 'home_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -205,7 +208,7 @@ class ProfileScreen extends StatelessWidget {
                         },
                       ),
                       _NavItem(
-                        icon: 'assets/images/Certificate.png',
+                        icon: 'assets/images/tfc1.png',
                         label: 'Download Certificate',
                         onTap: () {
                           Navigator.of(context).push(
@@ -217,9 +220,27 @@ class ProfileScreen extends StatelessWidget {
                       ),
                       _NavItem(
                         icon: Icons.support_agent_outlined,
-                        label: 'Help & Support',
-                        onTap: () {},
+                        label: 'Contact Us',
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => ContactUs(),
+                            ),
+                          );
+                        },
                       ),
+                      _NavItem(
+                        icon: Icons.support_agent_outlined,
+                        label: 'Help & Support',
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => HelpSupportPage(),
+                            ),
+                          );
+                        },
+                      ),
+
                       _NavItem(
                         icon: 'assets/images/ChatDots.png',
                         label: 'Feedback & Suggestions',
@@ -447,21 +468,29 @@ class ProfileScreen extends StatelessWidget {
                         label: 'Profile Enquiries',
                         onTap: () {},
                       ),
+
                       _NavItem(
-                        icon: 'assets/images/Certificate.png',
-                        label: 'Download Certificate',
+                        icon: Icons.support_agent_outlined,
+                        label: 'Contact Us',
                         onTap: () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (context) => CertificateDownloadScreen(),
+                              builder: (context) => ContactUs(),
                             ),
                           );
                         },
                       ),
+
                       _NavItem(
                         icon: Icons.support_agent_outlined,
                         label: 'Help & Support',
-                        onTap: () {},
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => HelpSupportPage(),
+                            ),
+                          );
+                        },
                       ),
                       _NavItem(
                         icon: 'assets/images/ChatDots.png',

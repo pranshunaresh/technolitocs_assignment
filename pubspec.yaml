@@ -27,7 +27,8 @@ dependencies:
   url_launcher: ^6.2.5
   marquee:
   file_picker:
-  share_plus: 
+  share_plus:
+  just_audio:
 
 
 dev_dependencies:
@@ -39,6 +40,7 @@ flutter:
 
   assets:
     - assets/images/
+    - assets/
 
   fonts:
     - family: Movatif

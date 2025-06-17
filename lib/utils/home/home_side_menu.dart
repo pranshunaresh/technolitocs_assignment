@@ -1,6 +1,9 @@
 import 'package:assihnment_technolitocs/config/model/user_model.dart';
 import 'package:assihnment_technolitocs/screens/explore_page/activity_page/activities_screen.dart';
 import 'package:assihnment_technolitocs/screens/merchandise/merchandise_screen.dart';
+import 'package:assihnment_technolitocs/screens/poll_screen.dart';
+import 'package:assihnment_technolitocs/screens/profile_enquiry_screen.dart';
+import 'package:assihnment_technolitocs/screens/rolbol_all_topics.dart';
 import 'package:assihnment_technolitocs/screens/rolbol_talks_screen.dart';
 import 'package:assihnment_technolitocs/utils/gallary/food_donation.dart';
 import 'package:assihnment_technolitocs/utils/gallary/gallary.dart';
@@ -16,7 +19,6 @@ import '../../screens/download_certificate.dart';
 // import '../../screens/edit_profile/download_certificate.dart';
 import '../../screens/explore_page/activity_page/blog_details.dart';
 import '../../screens/home_screen.dart';
-import '../../screens/profile_enquiry_screen.dart';
 
 class SideMenuWidget extends ConsumerStatefulWidget {
   const SideMenuWidget({Key? key}) : super(key: key);
@@ -234,9 +236,7 @@ class _SideMenuWidgetState extends ConsumerState<SideMenuWidget> {
                       onTap: () {
                         Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder:
-                                (context) =>
-                                    RolbolTalksScreen(title: "Rolbol Podcast"),
+                            builder: (context) => RolbolPodcastPage(),
                           ),
                         );
                       },
@@ -448,8 +448,19 @@ class _SideMenuWidgetState extends ConsumerState<SideMenuWidget> {
                         );
                       },
                     ),
-                    const _SubMenuItem('Spotlight'),
-                    const _SubMenuItem('Poll'),
+                    _SubMenuItem('Spotlight'),
+                    _SubMenuItem(
+                      'Poll',
+                      onTap: () {
+                        ///////////////////////
+                        //////////////////
+                        //////////////////////////
+                        /////////////////
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (context) => PollScreen()),
+                        );
+                      },
+                    ),
                   ],
                   childrenPadding: const EdgeInsets.only(left: 36),
                 ),
@@ -475,7 +486,7 @@ class _SideMenuWidgetState extends ConsumerState<SideMenuWidget> {
                 // Certificates
                 ListTile(
                   leading: Image.asset(
-                    'assets/images/Certificate.png',
+                    'assets/images/tfc1.png',
                     width: 24,
                     height: 24,
                   ),
